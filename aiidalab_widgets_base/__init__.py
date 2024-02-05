@@ -77,6 +77,7 @@ from .process import (
     RunningCalcJobOutputWidget,
     SubmitButtonWidget,
 )
+from .query_builder import QueryBuilderWidget
 from .structures import (
     BasicCellEditor,
     BasicStructureEditor,
@@ -116,6 +117,7 @@ __all__ = [
     "ProcessOutputsWidget",
     "ProcessReportWidget",
     "ProgressBarWidget",
+    "QueryBuilderWidget",
     "RunningCalcJobOutputWidget",
     "SmilesWidget",
     "StructureBrowserWidget",
