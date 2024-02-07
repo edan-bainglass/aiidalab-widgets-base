@@ -12,8 +12,20 @@ class CSS:
         "margin": "0 auto",
     }
 
+    M0 = {
+        "margin": "0",
+    }
+
     M2 = {
         "margin": "2px",
+    }
+
+    MX2 = {
+        "margin": "0 2px",
+    }
+
+    P2 = {
+        "padding": "2px",
     }
 
     P5 = {
@@ -38,6 +50,10 @@ class CSS:
 
     WFIT = {
         "width": "fit-content",
+    }
+
+    H100 = {
+        "height": "100%",
     }
 
     FLEX1 = {
@@ -68,4 +84,11 @@ class CSS:
 
     BUTTON = {
         **WFIT,
+    }
+
+    MULTISELECT = {
+        **FLEX1,
+        **P2,
+        **M0,
+        **H100,
     }
