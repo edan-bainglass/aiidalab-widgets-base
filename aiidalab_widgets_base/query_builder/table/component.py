@@ -3,6 +3,7 @@ from __future__ import annotations
 import ipywidgets as ipw
 import traitlets
 
+from ..service import AiiDAService
 from ..styles import CSS
 
 
@@ -17,7 +18,11 @@ class TableQueryComponentController:
         """docstring"""
         self._model = model
         self._view = view
+        self._init_view()
         self._set_event_handlers()
+
+    def _init_view(self) -> None:
+        """docstring"""
 
     def _show_view(self, _=None) -> None:
         """docstring"""
@@ -37,6 +42,10 @@ class TableQueryComponentController:
 
 class TableQueryComponentModel(traitlets.HasTraits):
     """docstring"""
+
+    def __init__(self, service: AiiDAService) -> None:
+        """docstring"""
+        self.aiida = service
 
 
 class TableQueryComponentView(ipw.VBox):

@@ -14,10 +14,16 @@ class QueryFiltersController(TableQueryComponentController):
     _model: QueryFiltersModel
     _view: QueryFiltersView
 
+    def _init_view(self) -> None:
+        """docstring"""
+        default_filter = get_filter_view(self._model.aiida)
+        default_filter.children += (default_filter.add,)
+        self._view.filters = [default_filter]
+
     def _add_filter(self, _=None) -> None:
         """docstring"""
         self._view.filters[-1].join.disabled = False
-        view = get_filter_view()
+        view = get_filter_view(self._model.aiida)
         view.children += (view.remove,)
         view.observe(self._remove_filter, "closed")
         self._view.filters = [*self._view.filters, view]
@@ -48,13 +54,6 @@ class QueryFiltersView(TableQueryComponentView):
     """docstring"""
 
     component_type = "filters"
-
-    def __init__(self, **kwargs) -> None:
-        """docstring"""
-        super().__init__(**kwargs)
-        default_filter = get_filter_view()
-        default_filter.children += (default_filter.add,)
-        self.content.children += (default_filter,)
 
     @property
     def filters(self) -> list[QueryFilterView]:

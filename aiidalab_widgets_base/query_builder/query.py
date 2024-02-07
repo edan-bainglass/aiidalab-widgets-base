@@ -8,9 +8,9 @@ from .styles import CSS
 from .table import TableQueryView, get_table_query_view
 
 
-def get_query_view():
+def get_query_view(aiida_service: AiiDAService) -> QBView:
     """docstring"""
-    model = QBModel(service=AiiDAService())
+    model = QBModel(aiida_service)
     view = QBView()
     _ = QBController(model, view)
     return view
@@ -28,7 +28,7 @@ class QBController:
 
     def _add_table_query(self, _=None) -> None:
         """docstring"""
-        view = get_table_query_view()
+        view = get_table_query_view(self._model.aiida)
         view.observe(self._remove_table_query, "closed")
         self._view.queries_div.children += (view,)
 
@@ -53,7 +53,7 @@ class QBModel(traitlets.HasTraits):
 
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
-        self._aiida = service
+        self.aiida = service
 
 
 class QBView(ipw.VBox):

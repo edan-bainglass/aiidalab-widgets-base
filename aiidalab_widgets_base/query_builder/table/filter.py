@@ -3,12 +3,13 @@ from __future__ import annotations
 import ipywidgets as ipw
 import traitlets
 
+from ..service import AiiDAService
 from ..styles import CSS
 
 
-def get_filter_view():
+def get_filter_view(service: AiiDAService) -> QueryFilterView:
     """docstring"""
-    model = QueryFilterModel()
+    model = QueryFilterModel(service)
     view = QueryFilterView()
     _ = QueryFilterController(model, view)
     return view
@@ -39,6 +40,10 @@ class QueryFilterController:
 
 class QueryFilterModel(traitlets.HasTraits):
     """docstring"""
+
+    def __init__(self, service: AiiDAService) -> None:
+        """docstring"""
+        self.aiida = service
 
 
 class QueryFilterView(ipw.HBox):
