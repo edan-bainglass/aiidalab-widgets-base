@@ -5,7 +5,7 @@ import traitlets
 
 from .service import AiiDAService
 from .styles import CSS
-from .table import TableQueryView, get_table_query_view
+from .node import NodeQueryView, get_node_query_view
 
 
 def get_query_view(aiida_service: AiiDAService) -> QBView:
@@ -24,17 +24,17 @@ class QBController:
         self._model = model
         self._view = view
         self._set_event_handlers()
-        self._add_table_query()
+        self._add_node_query()
 
-    def _add_table_query(self, _=None) -> None:
+    def _add_node_query(self, _=None) -> None:
         """docstring"""
-        view = get_table_query_view(self._model.aiida)
-        view.observe(self._remove_table_query, "closed")
+        view = get_node_query_view(self._model.aiida)
+        view.observe(self._remove_node_query, "closed")
         self._view.queries_div.children += (view,)
 
-    def _remove_table_query(self, trait: dict) -> None:
+    def _remove_node_query(self, trait: dict) -> None:
         """docstring"""
-        view: TableQueryView = trait["owner"]
+        view: NodeQueryView = trait["owner"]
         self._view.queries_div.children = (
             *filter(
                 lambda query_div: query_div != view,
@@ -45,7 +45,7 @@ class QBController:
 
     def _set_event_handlers(self) -> None:
         """docstring"""
-        self._view.add.on_click(self._add_table_query)
+        self._view.add.on_click(self._add_node_query)
 
 
 class QBModel(traitlets.HasTraits):
@@ -71,7 +71,7 @@ class QBView(ipw.VBox):
             },
             button_style="",
             icon="plus",
-            tooltip="Add table query",
+            tooltip="Add node query",
         )
 
         super().__init__(

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from ..service import AiiDAService
-from .component import TableQueryComponentView
+from .component import NodeQueryComponentView
 from .filters import (
     QueryFiltersController,
     QueryFiltersModel,
@@ -20,7 +20,7 @@ class QueryComponentFactory:
     aiida: AiiDAService
 
     @classmethod
-    def get_view(cls, component_type: str) -> TableQueryComponentView:
+    def get_view(cls, component_type: str) -> NodeQueryComponentView:
         """docstring"""
 
         if cls.aiida is None:

@@ -9,18 +9,18 @@ from ..styles import CSS
 from .factory import QueryComponentFactory
 
 
-def get_table_query_view(aiida_service: AiiDAService) -> TableQueryView:
+def get_node_query_view(aiida_service: AiiDAService) -> NodeQueryView:
     """docstring"""
-    model = TableQueryModel(aiida_service)
-    view = TableQueryView()
-    _ = TableQueryController(model, view)
+    model = NodeQueryModel(aiida_service)
+    view = NodeQueryView()
+    _ = NodeQueryController(model, view)
     return view
 
 
-class TableQueryController:
+class NodeQueryController:
     """docstring"""
 
-    def __init__(self, model: TableQueryModel, view: TableQueryView) -> None:
+    def __init__(self, model: NodeQueryModel, view: NodeQueryView) -> None:
         """docstring"""
         self._model = model
         self._view = view
@@ -44,7 +44,7 @@ class TableQueryController:
         self._view.remove.on_click(self._close_view)
 
 
-class TableQueryModel(traitlets.HasTraits):
+class NodeQueryModel(traitlets.HasTraits):
     """docstring"""
 
     def __init__(self, service: AiiDAService) -> None:
@@ -52,7 +52,7 @@ class TableQueryModel(traitlets.HasTraits):
         self.aiida = service
 
 
-class TableQueryView(ipw.VBox):
+class NodeQueryView(ipw.VBox):
     """docstring"""
 
     closed = traitlets.Bool(False)
@@ -60,17 +60,17 @@ class TableQueryView(ipw.VBox):
     def __init__(self, **kwargs):
         """docstring"""
 
-        self.table_selector = ipw.Dropdown(
+        self.node_selector = ipw.Dropdown(
             layout=CSS.M2,
             style=CSS.TIGHT_DESCRIPTION,
-            description="Table:",
+            description="Node:",
         )
 
         self.reset = ipw.Button(
             layout=CSS.BUTTON,
             button_style="warning",
             icon="refresh",
-            tooltip="Reset table query",
+            tooltip="Reset node query",
         )
 
         self.remove = ipw.Button(
@@ -86,7 +86,7 @@ class TableQueryView(ipw.VBox):
                 ipw.HBox(
                     layout={},
                     children=[
-                        self.table_selector,
+                        self.node_selector,
                         ipw.HBox(
                             layout=CSS.FLOAT_RIGHT,
                             children=[

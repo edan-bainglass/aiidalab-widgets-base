@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from .component import (
-    TableQueryComponentController,
-    TableQueryComponentModel,
-    TableQueryComponentView,
+    NodeQueryComponentController,
+    NodeQueryComponentModel,
+    NodeQueryComponentView,
 )
 from .filter import QueryFilterView, get_filter_view
 
 
-class QueryFiltersController(TableQueryComponentController):
+class QueryFiltersController(NodeQueryComponentController):
     """docstring"""
 
     _model: QueryFiltersModel
@@ -46,11 +46,11 @@ class QueryFiltersController(TableQueryComponentController):
         self._view.filters[0].add.on_click(self._add_filter)
 
 
-class QueryFiltersModel(TableQueryComponentModel):
+class QueryFiltersModel(NodeQueryComponentModel):
     """docstring"""
 
 
-class QueryFiltersView(TableQueryComponentView):
+class QueryFiltersView(NodeQueryComponentView):
     """docstring"""
 
     component_type = "filters"
