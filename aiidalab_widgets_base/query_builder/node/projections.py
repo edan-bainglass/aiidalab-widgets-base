@@ -4,13 +4,13 @@ import ipywidgets as ipw
 
 from ..styles import CSS
 from .component import (
-    TableQueryComponentController,
-    TableQueryComponentModel,
-    TableQueryComponentView,
+    NodeQueryComponentController,
+    NodeQueryComponentModel,
+    NodeQueryComponentView,
 )
 
 
-class QueryProjectionsController(TableQueryComponentController):
+class QueryProjectionsController(NodeQueryComponentController):
     """docstring"""
 
     _model: QueryProjectionsModel
@@ -37,11 +37,11 @@ class QueryProjectionsController(TableQueryComponentController):
         self._view.deselect_all.on_click(lambda _: self._deselect(all=True))
 
 
-class QueryProjectionsModel(TableQueryComponentModel):
+class QueryProjectionsModel(NodeQueryComponentModel):
     """docstring"""
 
 
-class QueryProjectionsView(TableQueryComponentView):
+class QueryProjectionsView(NodeQueryComponentView):
     """docstring"""
 
     component_type = "projections"

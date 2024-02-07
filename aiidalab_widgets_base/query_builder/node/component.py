@@ -7,13 +7,13 @@ from ..service import AiiDAService
 from ..styles import CSS
 
 
-class TableQueryComponentController:
+class NodeQueryComponentController:
     """docstring"""
 
     def __init__(
         self,
-        model: TableQueryComponentModel,
-        view: TableQueryComponentView,
+        model: NodeQueryComponentModel,
+        view: NodeQueryComponentView,
     ) -> None:
         """docstring"""
         self._model = model
@@ -40,7 +40,7 @@ class TableQueryComponentController:
         self._view.collapse.on_click(self._hide_view)
 
 
-class TableQueryComponentModel(traitlets.HasTraits):
+class NodeQueryComponentModel(traitlets.HasTraits):
     """docstring"""
 
     def __init__(self, service: AiiDAService) -> None:
@@ -48,7 +48,7 @@ class TableQueryComponentModel(traitlets.HasTraits):
         self.aiida = service
 
 
-class TableQueryComponentView(ipw.VBox):
+class NodeQueryComponentView(ipw.VBox):
     """docstring"""
 
     component_type = ""
