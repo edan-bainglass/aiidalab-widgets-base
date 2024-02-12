@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing as t
+
 import ipywidgets as ipw
 import traitlets
 
@@ -7,10 +9,14 @@ from ..service import AiiDAService, NODE_RELATIONSHIPS, GROUP_RELATIONSHIPS
 from ..styles import CSS
 from .factory import QueryComponentFactory
 
+if t.TYPE_CHECKING:
+    from .filters import QueryFiltersView
+    from .projections import QueryProjectionsView
 
-def get_node_query_view(aiida_service: AiiDAService) -> NodeQueryView:
+
+def get_node_query_view(service: AiiDAService) -> NodeQueryView:
     """docstring"""
-    model = NodeQueryModel(aiida_service)
+    model = NodeQueryModel(service)
     view = NodeQueryView()
     _ = NodeQueryController(model, view)
     return view
@@ -28,10 +34,11 @@ class NodeQueryController:
 
     def _init_view(self) -> None:
         """docstring"""
-        QueryComponentFactory.set_service(self._model.aiida)
-        self.filters_view = QueryComponentFactory.get_view("filters")
-        self.projections_view = QueryComponentFactory.get_view("projections")
-        self._view.children += (self.filters_view, self.projections_view)
+        QueryComponentFactory.set_node_query_model(self._model)
+        self._view.filters = QueryComponentFactory.get_view("filters")
+        self._view.projections = QueryComponentFactory.get_view("projections")
+        self._view.children += (self._view.filters, self._view.projections)
+        self._view.node_selector.options = self._model.aiida.get_nodes()
 
     def _close_view(self, _=None) -> None:
         """docstring"""
@@ -47,10 +54,20 @@ class NodeQueryController:
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.remove.on_click(self._close_view)
+        self._view.node_selector.observe(
+            self._update_relationship_options,
+            "value",
+        )
+        ipw.dlink(
+            (self._view.node_selector, "value"),
+            (self._model, "entry_point"),
+        )
 
 
 class NodeQueryModel(traitlets.HasTraits):
     """docstring"""
+
+    entry_point = traitlets.Unicode("")
 
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
@@ -84,6 +101,9 @@ class NodeQueryView(ipw.VBox):
             icon="times",
             tooltip="Remove query",
         )
+
+        self.filters: QueryFiltersView
+        self.projections: QueryProjectionsView
 
         super().__init__(
             layout=CSS.BORDERED_BOX,
