@@ -16,6 +16,16 @@ class QueryProjectionsController(NodeQueryComponentController):
     _model: QueryProjectionsModel
     _view: QueryProjectionsView
 
+    def _init_view(self) -> None:
+        """docstring"""
+        self._update_options()
+
+    def _update_options(self) -> None:
+        """docstring"""
+        self._view.selector.options = self._model.aiida.get_fields(
+            self._model.entry_point
+        )
+
     def _select(self, all=False) -> None:
         """docstring"""
         selected = getattr(self._view.selector, "options" if all else "value")
@@ -27,6 +37,11 @@ class QueryProjectionsController(NodeQueryComponentController):
         selected = getattr(self._view.selected, "options" if all else "value")
         options = self._view.selected.options
         self._view.selected.options = [*sorted({*options} - {*selected})]
+
+    def _refresh(self, _=None) -> None:
+        """docstring"""
+        self._deselect(all=True)
+        self._update_options()
 
     def _set_event_handlers(self) -> None:
         """docstring"""
