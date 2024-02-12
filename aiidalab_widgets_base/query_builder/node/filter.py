@@ -82,33 +82,56 @@ class QueryFilterView(ipw.HBox):
             tooltip="Remove filter",
         )
 
-        self.attribute = ipw.Dropdown(
+        self.join = ipw.Dropdown(
+            layout=CSS.WAUTO,
+            options=JOINS,
+            value="and",
+        )
+
+        self.open_ = ipw.ToggleButton(
+            layout=CSS.BUTTON,
+            description="(",
+            value=False,
+        )
+
+        self.field = ipw.Dropdown(
             layout=CSS.W50,
+        )
+
+        self.not_ = ipw.ToggleButton(
+            layout={"width": "50px"},
+            style=CSS.TIGHT_DESCRIPTION,
+            description="not",
+            value=False,
         )
 
         self.operator = ipw.Dropdown(
             layout=CSS.WAUTO,
             options=OPERATORS,
+            default="==",
         )
 
         self.argument = ipw.Text(
             layout=CSS.W50,
+            placeholder="value",
         )
 
-        self.join = ipw.Dropdown(
-            layout=CSS.WAUTO,
-            options=JOINS,
-            value="",
-            disabled=True,
+        self.close_ = ipw.ToggleButton(
+            layout=CSS.BUTTON,
+            description=")",
+            value=False,
         )
 
         self.form = ipw.HBox(
             layout=CSS.FLEX1,
             children=[
-                self.attribute,
+                self.join,
+                self.open_,
+                self.field,
+                self.not_,
                 self.operator,
                 self.argument,
-                self.join,
+                self.close_,
             ],
         )
 

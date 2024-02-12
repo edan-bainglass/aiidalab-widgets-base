@@ -94,6 +94,10 @@ class CSS:
         "description_width": "75px",
     }
 
+    TAG_TEXTBOX = {
+        "width": "100px",
+    }
+
     MULTISELECT = {
         **FLEX1,
         **P2,
