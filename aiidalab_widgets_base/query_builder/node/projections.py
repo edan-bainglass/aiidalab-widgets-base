@@ -120,3 +120,7 @@ class QueryProjectionsView(NodeQueryComponentView):
                 ],
             ),
         ]
+
+    @property
+    def state(self) -> list:
+        return list(self.selected.options)

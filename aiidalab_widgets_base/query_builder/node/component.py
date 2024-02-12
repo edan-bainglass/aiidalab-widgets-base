@@ -128,3 +128,8 @@ class NodeQueryComponentView(ipw.VBox):
             ],
             **kwargs,
         )
+
+    @property
+    def state(self) -> list:
+        """docstring"""
+        return []

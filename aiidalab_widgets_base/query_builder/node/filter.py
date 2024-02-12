@@ -142,3 +142,16 @@ class QueryFilterView(ipw.HBox):
             ],
             **kwargs,
         )
+
+    @property
+    def state(self) -> dict:
+        """docstring"""
+        return {
+            "join": self.join.value,
+            "(": self.open_.value,
+            "field": self.field.value,
+            "not": self.not_.value,
+            "operator": self.operator.value,
+            "argument": self.argument.value,
+            ")": self.close_.value,
+        }

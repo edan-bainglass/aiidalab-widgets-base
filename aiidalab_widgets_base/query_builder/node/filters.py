@@ -65,3 +65,9 @@ class QueryFiltersView(NodeQueryComponentView):
     def filters(self, filters: list[QueryFilterView]) -> list[QueryFilterView]:
         """docstring"""
         self.content.children = filters
+
+    @property
+    def state(self) -> list:
+        if self.container.layout.display == "none":
+            return []
+        return [filter.state for filter in self.filters]
