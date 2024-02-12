@@ -83,7 +83,15 @@ class CSS:
     }
 
     BUTTON = {
-        **WFIT,
+        "width": "33px",
+    }
+
+    COMPONENT_BUTTON = {
+        "width": "75px",
+    }
+
+    NODE_QUERY_SELECTOR = {
+        "description_width": "75px",
     }
 
     MULTISELECT = {
