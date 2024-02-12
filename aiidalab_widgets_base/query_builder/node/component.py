@@ -38,10 +38,16 @@ class NodeQueryComponentController:
         self._view.container.layout.display = "none"
         self._view.expand.layout.display = "inline-block"
 
+    def _refresh(self, _=None) -> None:
+        """docstring"""
+        raise NotImplementedError()
+
     def _set_event_handlers(self) -> None:
         """docstring"""
+        self._view.reset.on_click(self._refresh)
         self._view.expand.on_click(self._show_view)
         self._view.collapse.on_click(self._hide_view)
+        self._model.observe(self._refresh, "entry_point")
 
 
 class NodeQueryComponentModel(traitlets.HasTraits):
