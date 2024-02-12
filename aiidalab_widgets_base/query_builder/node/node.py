@@ -53,6 +53,12 @@ class NodeQueryController:
             GROUP_RELATIONSHIPS if is_group else NODE_RELATIONSHIPS
         )
 
+    def _move_query_up(self, _=None) -> None:
+        """docstring"""
+
+    def _move_query_down(self, _=None) -> None:
+        """docstring"""
+
     def _refresh(self, _=None) -> None:
         """docstring"""
         self._update_relationship_options()
@@ -61,6 +67,8 @@ class NodeQueryController:
         """docstring"""
         self._view.remove.on_click(self._close_view)
         self._view.reset.on_click(self._refresh)
+        self._view.move_up.on_click(self._move_query_up)
+        self._view.move_down.on_click(self._move_query_down)
         self._view.node_selector.observe(
             self._update_relationship_options,
             "value",
@@ -95,6 +103,24 @@ class NodeQueryView(ipw.VBox):
             description="Node:",
         )
 
+        self.my_tag = ipw.Text(
+            layout=CSS.TAG_TEXTBOX,
+            style=CSS.TIGHT_DESCRIPTION,
+            placeholder="tag",
+        )
+
+        self.relationship = ipw.Dropdown(
+            layout=CSS.M2,
+            style=CSS.NODE_QUERY_SELECTOR,
+            description="with:",
+        )
+
+        self.their_tag = ipw.Text(
+            layout=CSS.TAG_TEXTBOX,
+            style=CSS.TIGHT_DESCRIPTION,
+            placeholder="other tag",
+        )
+
         self.reset = ipw.Button(
             layout=CSS.BUTTON,
             button_style="warning",
@@ -109,6 +135,20 @@ class NodeQueryView(ipw.VBox):
             tooltip="Remove query",
         )
 
+        self.move_up = ipw.Button(
+            layout=CSS.BUTTON,
+            button_style="",
+            icon="arrow-up",
+            tooltip="Move up",
+        )
+
+        self.move_down = ipw.Button(
+            layout=CSS.BUTTON,
+            button_style="",
+            icon="arrow-down",
+            tooltip="Move down",
+        )
+
         self.filters: QueryFiltersView
         self.projections: QueryProjectionsView
 
@@ -118,12 +158,40 @@ class NodeQueryView(ipw.VBox):
                 ipw.HBox(
                     layout={},
                     children=[
-                        self.node_selector,
-                        ipw.HBox(
-                            layout=CSS.FLOAT_RIGHT,
+                        ipw.VBox(
+                            layout=CSS.FLEX1,
                             children=[
-                                self.reset,
-                                self.remove,
+                                ipw.HBox(
+                                    children=[
+                                        self.node_selector,
+                                        self.my_tag,
+                                    ],
+                                ),
+                                ipw.HBox(
+                                    children=[
+                                        self.relationship,
+                                        self.their_tag,
+                                    ],
+                                ),
+                            ],
+                        ),
+                        ipw.VBox(
+                            layout={},
+                            children=[
+                                ipw.HBox(
+                                    layout={},
+                                    children=[
+                                        self.reset,
+                                        self.remove,
+                                    ],
+                                ),
+                                ipw.HBox(
+                                    layout={},
+                                    children=[
+                                        self.move_up,
+                                        self.move_down,
+                                    ],
+                                ),
                             ],
                         ),
                     ],
