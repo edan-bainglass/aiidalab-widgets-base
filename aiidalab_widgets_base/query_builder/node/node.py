@@ -199,3 +199,20 @@ class NodeQueryView(ipw.VBox):
             ],
             **kwargs,
         )
+
+    @property
+    def state(self) -> dict:
+        """docstring"""
+        state = {
+            "node": self.node_selector.value,
+            "tag": self.my_tag.value,
+            "filters": self.filters.state,
+            "projections": self.projections.state,
+        }
+        if self.relationship.value:
+            state.update(
+                {
+                    f"with_{self.relationship.value}": self.their_tag.value,
+                }
+            )
+        return state
