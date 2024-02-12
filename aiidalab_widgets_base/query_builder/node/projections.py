@@ -60,25 +60,25 @@ class QueryProjectionsView(NodeQueryComponentView):
         )
 
         self.select = ipw.Button(
-            layout=CSS.WAUTO,
+            layout=CSS.BUTTON,
             icon="angle-right",
             tooltip="Select",
         )
 
         self.select_all = ipw.Button(
-            layout=CSS.WAUTO,
+            layout=CSS.BUTTON,
             icon="angle-double-right",
             tooltip="Select all",
         )
 
         self.deselect = ipw.Button(
-            layout=CSS.WAUTO,
+            layout=CSS.BUTTON,
             icon="angle-left",
             tooltip="Deselect",
         )
 
         self.deselect_all = ipw.Button(
-            layout=CSS.WAUTO,
+            layout=CSS.BUTTON,
             icon="angle-double-left",
             tooltip="Deselect all",
         )

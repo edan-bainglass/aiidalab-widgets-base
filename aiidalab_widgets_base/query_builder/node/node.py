@@ -62,7 +62,7 @@ class NodeQueryView(ipw.VBox):
 
         self.node_selector = ipw.Dropdown(
             layout=CSS.M2,
-            style=CSS.TIGHT_DESCRIPTION,
+            style=CSS.NODE_QUERY_SELECTOR,
             description="Node:",
         )
 

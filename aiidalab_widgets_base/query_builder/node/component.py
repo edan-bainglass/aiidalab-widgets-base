@@ -71,7 +71,7 @@ class NodeQueryComponentView(ipw.VBox):
         )
 
         self.expand = ipw.Button(
-            layout=CSS.BUTTON,
+            layout=CSS.COMPONENT_BUTTON,
             button_style="",
             icon="plus",
             description=self.component_type,
