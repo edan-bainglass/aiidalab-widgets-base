@@ -3,8 +3,7 @@ from __future__ import annotations
 import ipywidgets as ipw
 import traitlets
 
-from aiidalab_widgets_base.query_builder.service import AiiDAService
-
+from ..service import AiiDAService, NODE_RELATIONSHIPS, GROUP_RELATIONSHIPS
 from ..styles import CSS
 from .factory import QueryComponentFactory
 
@@ -39,6 +38,12 @@ class NodeQueryController:
         self._view.closed = True
         self._view.close()
 
+    def _update_relationship_options(self, _=None) -> None:
+        """docstring"""
+        is_group = self._view.node_selector.label == "Group"
+        self._view.relationship.options = (
+            GROUP_RELATIONSHIPS if is_group else NODE_RELATIONSHIPS
+        )
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.remove.on_click(self._close_view)

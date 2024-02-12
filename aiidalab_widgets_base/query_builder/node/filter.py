@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipywidgets as ipw
 import traitlets
 
-from ..service import AiiDAService
+from ..service import AiiDAService, OPERATORS, JOINS
 from ..styles import CSS
 
 
@@ -105,31 +105,3 @@ class QueryFilterView(ipw.HBox):
             ],
             **kwargs,
         )
-
-
-JOINS = [
-    "",
-    "and",
-    "or",
-    "(or)",
-]
-
-OPERATORS = [
-    "",
-    "==",
-    "in",
-    ">",
-    "<",
-    "<=",
-    ">=",
-    "like",
-    "ilike",
-    "or",
-    "and",
-    "has_key",
-    "of_type",
-    "of_length",
-    "shorter",
-    "longer",
-    "contains",
-]
