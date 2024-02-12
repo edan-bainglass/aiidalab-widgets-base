@@ -8,9 +8,9 @@ from .styles import CSS
 from .node import NodeQueryView, get_node_query_view
 
 
-def get_query_view(aiida_service: AiiDAService) -> QBView:
+def get_query_view(service: AiiDAService) -> QBView:
     """docstring"""
-    model = QBModel(aiida_service)
+    model = QBModel(service)
     view = QBView()
     _ = QBController(model, view)
     return view
@@ -30,17 +30,17 @@ class QBController:
         """docstring"""
         view = get_node_query_view(self._model.aiida)
         view.observe(self._remove_node_query, "closed")
-        self._view.queries_div.children += (view,)
+        self._view.node_queries += (view,)
 
     def _remove_node_query(self, trait: dict) -> None:
         """docstring"""
         view: NodeQueryView = trait["owner"]
-        self._view.queries_div.children = (
+        self._view.node_queries = [
             *filter(
-                lambda query_div: query_div != view,
-                self._view.queries_div.children,
+                lambda node_query: node_query != view,
+                self._view.node_queries,
             ),
-        )
+        ]
         view.unobserve_all()
 
     def _set_event_handlers(self) -> None:
@@ -62,7 +62,7 @@ class QBView(ipw.VBox):
     def __init__(self, **kwargs) -> None:
         """docstring"""
 
-        self.queries_div = ipw.VBox()
+        self.node_queries_div = ipw.VBox()
 
         self.add = ipw.Button(
             layout={
@@ -76,7 +76,7 @@ class QBView(ipw.VBox):
 
         super().__init__(
             children=[
-                self.queries_div,
+                self.node_queries_div,
                 ipw.VBox(
                     layout={
                         **CSS.PY5,
@@ -96,7 +96,7 @@ class QBView(ipw.VBox):
 
         self.reset = ipw.Button(
             layout=CSS.BUTTON,
-            button_style="danger",
+            button_style="warning",
             icon="refresh",
             tooltip="Reset query",
         )
@@ -120,3 +120,13 @@ class QBView(ipw.VBox):
                 ),
             ],
         )
+
+    @property
+    def node_queries(self) -> list[NodeQueryView]:
+        """docstring"""
+        return list(self.node_queries_div.children)
+
+    @node_queries.setter
+    def node_queries(self, queries=list[NodeQueryView]) -> None:
+        """docstring"""
+        self.node_queries_div.children = queries
