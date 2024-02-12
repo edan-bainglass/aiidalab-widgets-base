@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import ipywidgets as ipw
 import traitlets
+from aiida import orm
 
+from .node import NodeQueryView, get_node_query_view
 from .service import AiiDAService
 from .styles import CSS
-from .node import NodeQueryView, get_node_query_view
 
 
 def get_query_view(service: AiiDAService) -> QBView:
@@ -43,9 +44,15 @@ class QBController:
         ]
         view.unobserve_all()
 
+    def _submit_query(self, _=None) -> None:
+        """docstring"""
+        node_queries = [node.state for node in self._view.node_queries]
+        self._model.submit(node_queries)
+
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.add.on_click(self._add_node_query)
+        self._view.submit.on_click(self._submit_query)
 
 
 class QBModel(traitlets.HasTraits):
@@ -54,6 +61,110 @@ class QBModel(traitlets.HasTraits):
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
         self.aiida = service
+
+    def submit(self, node_queries: list[dict]) -> None:
+        """docstring"""
+        query = []
+        for node_query in node_queries:
+            node = self.aiida.get_entry_point(node_query.pop("node"))
+            args = self._process_query_args(node, node_query)
+            query.append((node, args))
+        self.aiida.submit(query)
+
+    def _process_query_args(self, node: orm.Node, query: dict) -> dict:
+        """docstring"""
+        filters = query.pop("filters")
+        projections = query.pop("projections")
+        return {
+            "filters": self._process_filters(node, filters),
+            "project": self._process_projections(node, projections),
+            **query,
+        }
+
+    def _process_filters(
+        self,
+        node: orm.Node,
+        filters: list[dict],
+    ) -> orm.QbFieldFilters:
+        """docstring"""
+
+        PRECEDENCE = {
+            "and": 1,
+            "or": 0,
+        }
+
+        filter_stack: list[orm.QbFieldFilters] = []
+        operator_stack: list[str] = []
+        opened_parentheses_count = 0
+
+        for filter_args in filters:
+            join = filter_args.pop("join")
+            open_ = filter_args.pop("(")
+            close_ = filter_args.pop(")")
+            filter = self._process_filter(node, filter_args)
+
+            if join:
+                while operator_stack:
+                    op = operator_stack[-1]
+                    if op == "(" or PRECEDENCE[op] <= PRECEDENCE[join]:
+                        break
+                    operator_stack.pop()
+                    right = filter_stack.pop()
+                    left = filter_stack.pop()
+                    filter_stack.append(left & right)
+                operator_stack.append(join)
+
+            if open_:
+                opened_parentheses_count += 1
+                operator_stack.append("(")
+
+            filter_stack.append(filter)
+
+            if close_:
+                opened_parentheses_count -= 1
+                if opened_parentheses_count < 0:
+                    raise ValueError("found ) without preceding (")
+
+                while operator_stack:
+                    op = operator_stack.pop()
+                    if op == "(":
+                        break
+                    right = filter_stack.pop()
+                    left = filter_stack.pop()
+                    if op == "and":
+                        filter_stack.append(left & right)
+                    elif op == "or":
+                        filter_stack.append(left | right)
+                    else:
+                        raise ValueError("invalid operator")
+
+        while operator_stack:
+            op = operator_stack.pop()
+            right = filter_stack.pop()
+            left = filter_stack.pop()
+            if op == "and":
+                filter_stack.append(left & right)
+            elif op == "or":
+                filter_stack.append(left | right)
+            else:
+                raise ValueError("invalid operator")
+
+        return filter_stack.pop()
+
+    def _process_filter(
+        self,
+        node: orm.Node,
+        filter: dict,
+    ) -> orm.QbFieldFilters:
+        """docstring"""
+        field, not_, op, value = filter.values()
+        qb_field = node.fields[field]
+        operator = f"!{op}" if not_ else op
+        return orm.QbFieldFilters([(qb_field, operator, value)])
+
+    def _process_projections(self, node: orm.Node, projections: dict):
+        """docstring"""
+        return [node.fields[projection] for projection in projections]
 
 
 class QBView(ipw.VBox):
