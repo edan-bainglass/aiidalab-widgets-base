@@ -39,6 +39,7 @@ class NodeQueryController:
         self._view.projections = QueryComponentFactory.get_view("projections")
         self._view.children += (self._view.filters, self._view.projections)
         self._view.node_selector.options = self._model.aiida.get_nodes()
+        self._update_relationship_options()
 
     def _close_view(self, _=None) -> None:
         """docstring"""
@@ -51,9 +52,15 @@ class NodeQueryController:
         self._view.relationship.options = (
             GROUP_RELATIONSHIPS if is_group else NODE_RELATIONSHIPS
         )
+
+    def _refresh(self, _=None) -> None:
+        """docstring"""
+        self._update_relationship_options()
+
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.remove.on_click(self._close_view)
+        self._view.reset.on_click(self._refresh)
         self._view.node_selector.observe(
             self._update_relationship_options,
             "value",

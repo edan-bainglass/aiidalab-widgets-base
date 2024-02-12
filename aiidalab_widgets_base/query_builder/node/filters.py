@@ -17,13 +17,15 @@ class QueryFiltersController(NodeQueryComponentController):
     def _init_view(self) -> None:
         """docstring"""
         default_filter = get_filter_view(self._model)
+        default_filter.join.value = None
+        default_filter.join.layout.visibility = "hidden"
         default_filter.children += (default_filter.add,)
+        default_filter.add.on_click(self._add_filter)
         self._view.filters = [default_filter]
 
     def _add_filter(self, _=None) -> None:
         """docstring"""
-        self._view.filters[-1].join.disabled = False
-        view = get_filter_view(self._model.aiida)
+        view = get_filter_view(self._model)
         view.children += (view.remove,)
         view.observe(self._remove_filter, "closed")
         self._view.filters = [*self._view.filters, view]
@@ -38,12 +40,10 @@ class QueryFiltersController(NodeQueryComponentController):
             ),
         ]
         view.unobserve_all()
-        self._view.filters[-1].join.disabled = True
 
-    def _set_event_handlers(self) -> None:
+    def _refresh(self, _=None) -> None:
         """docstring"""
-        super()._set_event_handlers()
-        self._view.filters[0].add.on_click(self._add_filter)
+        self._init_view()
 
 
 class QueryFiltersModel(NodeQueryComponentModel):
