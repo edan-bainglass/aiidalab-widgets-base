@@ -16,7 +16,7 @@ class QueryFiltersController(NodeQueryComponentController):
 
     def _init_view(self) -> None:
         """docstring"""
-        default_filter = get_filter_view(self._model.aiida)
+        default_filter = get_filter_view(self._model)
         default_filter.children += (default_filter.add,)
         self._view.filters = [default_filter]
 
@@ -54,6 +54,7 @@ class QueryFiltersView(NodeQueryComponentView):
     """docstring"""
 
     component_type = "filters"
+    expand_button_description = "filter"
 
     @property
     def filters(self) -> list[QueryFilterView]:

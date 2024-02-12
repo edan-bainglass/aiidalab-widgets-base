@@ -44,7 +44,8 @@ class QueryProjectionsModel(NodeQueryComponentModel):
 class QueryProjectionsView(NodeQueryComponentView):
     """docstring"""
 
-    component_type = "projections"
+    component_type = "projection"
+    expand_button_description = "project"
 
     def __init__(self, **kwargs) -> None:
         """docstring"""

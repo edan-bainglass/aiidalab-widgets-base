@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import typing as t
+
 import ipywidgets as ipw
 import traitlets
 
-from ..service import AiiDAService
 from ..styles import CSS
+
+if t.TYPE_CHECKING:
+    from .node import NodeQueryModel
 
 
 class NodeQueryComponentController:
@@ -43,15 +47,19 @@ class NodeQueryComponentController:
 class NodeQueryComponentModel(traitlets.HasTraits):
     """docstring"""
 
-    def __init__(self, service: AiiDAService) -> None:
+    entry_point = traitlets.Unicode("")
+
+    def __init__(self, model: NodeQueryModel) -> None:
         """docstring"""
-        self.aiida = service
+        ipw.dlink((model, "entry_point"), (self, "entry_point"))
+        self.aiida = model.aiida
 
 
 class NodeQueryComponentView(ipw.VBox):
     """docstring"""
 
     component_type = ""
+    expand_button_description = ""
 
     def __init__(self, **kwargs) -> None:
         """docstring"""
@@ -74,7 +82,7 @@ class NodeQueryComponentView(ipw.VBox):
             layout=CSS.COMPONENT_BUTTON,
             button_style="",
             icon="plus",
-            description=self.component_type,
+            description=self.expand_button_description,
             tooltip=f"Add {self.component_type}",
         )
 

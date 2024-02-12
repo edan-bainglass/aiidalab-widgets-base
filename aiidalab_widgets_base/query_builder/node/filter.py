@@ -1,16 +1,22 @@
 from __future__ import annotations
 
+import typing as t
+
 import ipywidgets as ipw
 import traitlets
 
 from ..service import AiiDAService, OPERATORS, JOINS
 from ..styles import CSS
 
+if t.TYPE_CHECKING:
+    from .filters import QueryFiltersModel
 
-def get_filter_view(service: AiiDAService) -> QueryFilterView:
+
+def get_filter_view(filters_model: QueryFiltersModel) -> QueryFilterView:
     """docstring"""
-    model = QueryFilterModel(service)
+    model = QueryFilterModel(filters_model.aiida)
     view = QueryFilterView()
+    ipw.dlink((filters_model, "entry_point"), (model, "entry_point"))
     _ = QueryFilterController(model, view)
     return view
 
@@ -26,7 +32,13 @@ class QueryFilterController:
         """docstring"""
         self._model = model
         self._view = view
+        self._init_view()
         self._set_event_handlers()
+
+    def _init_view(self) -> None:
+        """docstring"""
+        fields = self._model.aiida.get_fields(self._model.entry_point)
+        self._view.field.options = fields
 
     def _close_view(self, _=None) -> None:
         """docstring"""
@@ -40,6 +52,8 @@ class QueryFilterController:
 
 class QueryFilterModel(traitlets.HasTraits):
     """docstring"""
+
+    entry_point = traitlets.Unicode("")
 
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
