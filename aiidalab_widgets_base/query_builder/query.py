@@ -205,6 +205,8 @@ class QBView(ipw.VBox):
     def _build_controls_div(self) -> ipw.VBox:
         """docstring"""
 
+        self.message = ipw.Label()
+
         self.reset = ipw.Button(
             layout=CSS.BUTTON,
             button_style="warning",
@@ -223,10 +225,16 @@ class QBView(ipw.VBox):
             layout={},
             children=[
                 ipw.HBox(
-                    layout=CSS.FLOAT_RIGHT,
+                    layout=CSS.SPACE_BETWEEN,
                     children=[
-                        self.reset,
-                        self.submit,
+                        self.message,
+                        ipw.HBox(
+                            layout={},
+                            children=[
+                                self.reset,
+                                self.submit,
+                            ],
+                        ),
                     ],
                 ),
             ],
