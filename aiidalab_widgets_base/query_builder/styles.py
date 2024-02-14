@@ -72,9 +72,7 @@ class CSS:
         "border": "1px solid lightgray",
     }
 
-    SPACE_BETWEEN = {
-        "justify_content": "space-between"
-    }
+    SPACE_BETWEEN = {"justify_content": "space-between"}
 
     BORDERED_BOX = {
         **M2,

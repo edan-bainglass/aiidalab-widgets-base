@@ -47,11 +47,18 @@ class QueryFiltersController(NodeQueryComponentController):
         """docstring"""
         self._init_view()
 
+    def _toggle_validity(self, _=None) -> None:
+        """docstring"""
+        self._view.is_valid = all(
+            filter.is_valid for filter in self._view.filters if filter.argument.value
+        )
+
     def _get_filter_view(self) -> QueryFilterView:
         """docstring"""
         model = QueryFilterModel(self._model.aiida)
         ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
         view = QueryFilterView()
+        view.observe(self._toggle_validity, "is_valid")
         _ = QueryFilterController(model, view)
         return view
 
@@ -69,10 +76,10 @@ class QueryFiltersView(NodeQueryComponentView):
     @property
     def filters(self) -> list[QueryFilterView]:
         """docstring"""
-        return self.content.children
+        return list(self.content.children)
 
     @filters.setter
-    def filters(self, filters: list[QueryFilterView]) -> list[QueryFilterView]:
+    def filters(self, filters: list[QueryFilterView]) -> None:
         """docstring"""
         self.content.children = filters
 

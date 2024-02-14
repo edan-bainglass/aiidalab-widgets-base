@@ -54,6 +54,12 @@ class NodeQueryController:
         """docstring"""
         self._update_relationship_options()
 
+    def _toggle_validity(self, _=None) -> None:
+        """docstring"""
+        self._view.is_valid = (
+            self._view.filters.is_valid and self._view.projections.is_valid
+        )
+
     def _get_component_view(self, type_: str) -> NodeQueryComponentView:
         """docstring"""
         view = None
@@ -61,11 +67,13 @@ class NodeQueryController:
             model = QueryFiltersModel(self._model.aiida)
             ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
             view = QueryFiltersView()
+            view.observe(self._toggle_validity, "is_valid")
             _ = QueryFiltersController(model, view)
         elif type_ == "projections":
             model = QueryProjectionsModel(self._model.aiida)
             ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
             view = QueryProjectionsView()
+            view.observe(self._toggle_validity, "is_valid")
             _ = QueryProjectionsController(model, view)
         else:
             raise ValueError(
@@ -103,6 +111,7 @@ class NodeQueryView(ipw.VBox):
     """docstring"""
 
     closed = traitlets.Bool(False)
+    is_valid = traitlets.Bool(True)
 
     def __init__(self, **kwargs):
         """docstring"""
