@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipywidgets as ipw
 import traitlets
 
-from ..service import JOINS, OPERATORS, AiiDAService
+from ..service import AiiDAService
 from ..styles import CSS
 
 
@@ -23,8 +23,9 @@ class QueryFilterController:
 
     def _init_view(self) -> None:
         """docstring"""
-        fields = self._model.aiida.get_fields(self._model.entry_point)
-        self._view.field.options = fields
+        self._view.field.options = self._model.get_fields()
+        field = self._view.field.value
+        self._view.operator.options = self._model.get_operators(field)
 
     def _close_view(self, _=None) -> None:
         """docstring"""
@@ -45,6 +46,13 @@ class QueryFilterModel(traitlets.HasTraits):
         """docstring"""
         self.aiida = service
 
+    def get_fields(self) -> list[str]:
+        """docstring"""
+        return self.aiida.get_fields(self.entry_point)
+
+    def get_operators(self, field: str) -> list[str]:
+        """docstring"""
+        return self.aiida.get_operators(self.entry_point, field)
 
 class QueryFilterView(ipw.HBox):
     """docstring"""
@@ -70,7 +78,7 @@ class QueryFilterView(ipw.HBox):
 
         self.join = ipw.Dropdown(
             layout=CSS.WAUTO,
-            options=JOINS,
+            options=("and", "or"),
             value="and",
         )
 
@@ -92,8 +100,7 @@ class QueryFilterView(ipw.HBox):
         )
 
         self.operator = ipw.Dropdown(
-            layout=CSS.WAUTO,
-            options=OPERATORS,
+            layout=CSS.OPERATOR_SELECTOR,
             default="==",
         )
 
