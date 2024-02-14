@@ -1,24 +1,10 @@
 from __future__ import annotations
 
-import typing as t
-
 import ipywidgets as ipw
 import traitlets
 
-from ..service import AiiDAService, OPERATORS, JOINS
+from ..service import JOINS, OPERATORS, AiiDAService
 from ..styles import CSS
-
-if t.TYPE_CHECKING:
-    from .filters import QueryFiltersModel
-
-
-def get_filter_view(filters_model: QueryFiltersModel) -> QueryFilterView:
-    """docstring"""
-    model = QueryFilterModel(filters_model.aiida)
-    view = QueryFilterView()
-    ipw.dlink((filters_model, "entry_point"), (model, "entry_point"))
-    _ = QueryFilterController(model, view)
-    return view
 
 
 class QueryFilterController:
