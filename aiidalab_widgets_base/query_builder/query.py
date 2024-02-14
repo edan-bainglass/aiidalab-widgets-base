@@ -41,10 +41,26 @@ class QBController:
         node_queries = [node.state for node in self._view.node_queries]
         self._model.submit(node_queries)
 
+    def _notify_validity(self, _=None) -> None:
+        """docstring"""
+        if not self._view.is_valid:
+            style = '"color: red;"'
+            message = "Please correct invalid input"
+            self._view.message.value = f"<span style={style}>{message}</span>"
+        else:
+            self._view.message.value = ""
+
+    def _toggle_validity(self, _=None) -> None:
+        """docstring"""
+        self._view.is_valid = all(
+            node_query.is_valid for node_query in self._view.node_queries
+        )
+
     def _get_node_query_view(self) -> NodeQueryView:
         """docstring"""
         model = NodeQueryModel(self._model.aiida)
         view = NodeQueryView()
+        view.observe(self._toggle_validity, "is_valid")
         _ = NodeQueryController(model, view)
         return view
 
@@ -52,6 +68,7 @@ class QBController:
         """docstring"""
         self._view.add.on_click(self._add_node_query)
         self._view.submit.on_click(self._submit_query)
+        self._view.observe(self._notify_validity, "is_valid")
 
 
 class QBModel(traitlets.HasTraits):
@@ -169,6 +186,8 @@ class QBModel(traitlets.HasTraits):
 class QBView(ipw.VBox):
     """docstring"""
 
+    is_valid = traitlets.Bool(True)
+
     def __init__(self, **kwargs) -> None:
         """docstring"""
 
@@ -204,7 +223,7 @@ class QBView(ipw.VBox):
     def _build_controls_div(self) -> ipw.VBox:
         """docstring"""
 
-        self.message = ipw.Label()
+        self.message = ipw.HTML()
 
         self.reset = ipw.Button(
             layout=CSS.BUTTON,

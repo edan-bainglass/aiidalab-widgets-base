@@ -59,6 +59,8 @@ class NodeQueryComponentModel(traitlets.HasTraits):
 class NodeQueryComponentView(ipw.VBox):
     """docstring"""
 
+    is_valid = traitlets.Bool(True)
+
     component_type = ""
     expand_button_description = ""
 

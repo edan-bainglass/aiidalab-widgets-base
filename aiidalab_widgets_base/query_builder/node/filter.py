@@ -32,9 +32,38 @@ class QueryFilterController:
         self._view.closed = True
         self._view.close()
 
+    def _validate(self, _=None) -> None:
+        """docstring"""
+        if self._view.argument.value:
+            state = self._view.state_of_filter
+            self._view.is_valid = self._model.validate(state)
+            if not self._view.is_valid:
+                self._view.argument.add_class("bad-text-input")
+            else:
+                self._view.argument.remove_class("bad-text-input")
+        else:
+            self._view.is_valid = True
+            self._view.argument.remove_class("bad-text-input")
+
+    def _refresh(self, _=None) -> None:
+        """docstring"""
+        self._init_view()
+        self._view.operator.value = "=="
+        self._view.argument.value = ""
+
+    def _refresh_all(self, _=None) -> None:
+        """docstring"""
+        self._refresh()
+        self._view.join.value = "and" if self._view.join.value is not None else None
+        self._view.open_.value = False
+        self._view.not_.value = False
+        self._view.close_.value = False
+
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.remove.on_click(self._close_view)
+        self._view.argument.observe(self._validate, "value")
+        self._view.field.observe(self._refresh, "value")
 
 
 class QueryFilterModel(traitlets.HasTraits):
@@ -54,10 +83,16 @@ class QueryFilterModel(traitlets.HasTraits):
         """docstring"""
         return self.aiida.get_operators(self.entry_point, field)
 
+    def validate(self, filter_args: dict) -> bool:
+        """docstring"""
+        return self.aiida.validate_filter(self.entry_point, filter_args)
+
+
 class QueryFilterView(ipw.HBox):
     """docstring"""
 
     closed = traitlets.Bool(False)
+    is_valid = traitlets.Bool(True)
 
     def __init__(self, **kwargs):
         """docstring"""
@@ -137,14 +172,24 @@ class QueryFilterView(ipw.HBox):
         )
 
     @property
-    def state(self) -> dict:
+    def state_of_filter(self) -> dict:
         """docstring"""
         return {
-            "join": self.join.value,
-            "(": self.open_.value,
-            "field": self.field.value,
+            "field": self.field.label,
             "not": self.not_.value,
             "operator": self.operator.value,
             "argument": self.argument.value,
-            ")": self.close_.value,
         }
+
+    @property
+    def state(self) -> dict:
+        """docstring"""
+        state = self.state_of_filter
+        state.update(
+            {
+                "join": self.join.value,
+                "(": self.open_.value,
+                ")": self.close_.value,
+            }
+        )
+        return state
