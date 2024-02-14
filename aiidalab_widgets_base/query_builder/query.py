@@ -4,17 +4,9 @@ import ipywidgets as ipw
 import traitlets
 from aiida import orm
 
-from .node import NodeQueryView, get_node_query_view
+from .node import NodeQueryController, NodeQueryModel, NodeQueryView
 from .service import AiiDAService
 from .styles import CSS
-
-
-def get_query_view(service: AiiDAService) -> QBView:
-    """docstring"""
-    model = QBModel(service)
-    view = QBView()
-    _ = QBController(model, view)
-    return view
 
 
 class QBController:
@@ -29,7 +21,7 @@ class QBController:
 
     def _add_node_query(self, _=None) -> None:
         """docstring"""
-        view = get_node_query_view(self._model.aiida)
+        view = self._get_node_query_view()
         view.observe(self._remove_node_query, "closed")
         self._view.node_queries += (view,)
 
@@ -48,6 +40,13 @@ class QBController:
         """docstring"""
         node_queries = [node.state for node in self._view.node_queries]
         self._model.submit(node_queries)
+
+    def _get_node_query_view(self) -> NodeQueryView:
+        """docstring"""
+        model = NodeQueryModel(self._model.aiida)
+        view = NodeQueryView()
+        _ = NodeQueryController(model, view)
+        return view
 
     def _set_event_handlers(self) -> None:
         """docstring"""

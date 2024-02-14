@@ -3,7 +3,7 @@ from __future__ import annotations
 import ipywidgets as ipw
 
 from .guide import QueryBuilderGuide
-from .query import get_query_view
+from .query import QBController, QBModel, QBView
 from .results import get_results_view
 from .service import AiiDAService
 
@@ -25,7 +25,7 @@ class QueryBuilderWidget(ipw.VBox):
         tabs = ipw.Tab(
             layout={},
             children=[
-                get_query_view(service),
+                self._get_query_view(service),
                 get_results_view(),
                 QueryBuilderGuide(),
             ],
@@ -36,3 +36,10 @@ class QueryBuilderWidget(ipw.VBox):
             tabs.set_title(i, self._TAB_LABELS[i])
 
         super().__init__(children=[tabs], **kwargs)
+
+    def _get_query_view(self, service: AiiDAService) -> QBView:
+        """docstring"""
+        model = QBModel(service)
+        view = QBView()
+        _ = QBController(model, view)
+        return view
