@@ -47,8 +47,10 @@ class QBController:
             style = '"color: red;"'
             message = "Please correct invalid input"
             self._view.message.value = f"<span style={style}>{message}</span>"
+            self._view.submit.disabled = True
         else:
             self._view.message.value = ""
+            self._view.submit.disabled = False
 
     def _toggle_validity(self, _=None) -> None:
         """docstring"""
