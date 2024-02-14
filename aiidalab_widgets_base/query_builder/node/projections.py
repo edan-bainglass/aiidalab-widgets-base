@@ -22,9 +22,7 @@ class QueryProjectionsController(NodeQueryComponentController):
 
     def _update_options(self) -> None:
         """docstring"""
-        self._view.selector.options = self._model.aiida.get_fields(
-            self._model.entry_point
-        )
+        self._view.selector.options = self._model.get_fields()
 
     def _select(self, all=False) -> None:
         """docstring"""
@@ -55,6 +53,9 @@ class QueryProjectionsController(NodeQueryComponentController):
 class QueryProjectionsModel(NodeQueryComponentModel):
     """docstring"""
 
+    def get_fields(self) -> list[str]:
+        """docstring"""
+        return self.aiida.get_fields(self.entry_point)
 
 class QueryProjectionsView(NodeQueryComponentView):
     """docstring"""
