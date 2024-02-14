@@ -6,6 +6,7 @@ import typing as t
 import aiida.plugins.entry_point as ep
 from aiida import orm
 from aiida.plugins.factories import BaseFactory
+from yaml import safe_load
 
 
 class AiiDAService:
@@ -22,6 +23,7 @@ class AiiDAService:
         in (
             "Group",
             "Int",
+            "StructureData",
         )
     ]
 
@@ -75,6 +77,52 @@ class AiiDAService:
         group, name = entry_point.split("_")
         return BaseFactory(group, name)
 
+    def validate_filter(
+        self,
+        entry_point: str,
+        filter_args: dict[str, str],
+    ) -> bool:
+        """docstring"""
+        node = self.get_entry_point(entry_point)
+        field = node.fields[filter_args.pop("field")]
+        _, operator, value = filter_args.values()
+
+        if "in" in operator:
+            value = f"[{value}]"
+        elif field.qb_field == "attributes.value":
+            if isinstance(node, orm.Str):
+                pass  # HANDLE
+            if issubclass(node, orm.NumericType) and not is_numeric(value):
+                return False
+            if isinstance(node, orm.Bool) and not is_boolean(value):
+                return False
+            if isinstance(node, orm.List) and not is_iterable(value):
+                return False
+        else:
+            dtype = _extract_field_type(field.dtype)
+
+            if dtype is str:
+                # TODO needs work (handle ', ", and combo cases)
+                value = f"'{value}'"
+
+            try:
+                cast = self.cast_filter_value(value)
+                if not isinstance(cast, dtype):
+                    return False
+            except Exception:
+                return False
+
+        try:
+            cast = self.cast_filter_value(value)
+        except Exception:
+            return False
+
+        return True
+
+    def cast_filter_value(self, value: str) -> t.Any:
+        """docstring"""
+        return safe_load(value)
+
 
 def _extract_field_type(dtype: t.Any) -> t.Any:
     """docstring"""
@@ -84,6 +132,30 @@ def _extract_field_type(dtype: t.Any) -> t.Any:
         return datetime.datetime  # VERIFY
     return dtype
 
+
+def is_numeric(value: str) -> bool:
+    """docstring"""
+    return value.isnumeric()
+
+
+def is_boolean(value: str) -> bool:
+    """docstring"""
+    return value.capitalize() in BOOLEANS
+
+
+def is_iterable(value: str) -> bool:
+    """docstring"""
+    try:
+        safe_load(value)
+        return True
+    except Exception:
+        return False
+
+
+BOOLEANS = {
+    "True": True,
+    "False": False,
+}
 
 NODE_RELATIONSHIPS = [
     "",
