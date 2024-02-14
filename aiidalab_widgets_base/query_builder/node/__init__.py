@@ -1,7 +1,7 @@
-from .node import NodeQueryView, get_node_query_view
-
+from .node import NodeQueryController, NodeQueryModel, NodeQueryView
 
 __all__ = [
+    "NodeQueryModel",
     "NodeQueryView",
-    "get_node_query_view",
+    "NodeQueryController",
 ]

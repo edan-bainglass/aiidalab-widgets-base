@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import ipywidgets as ipw
+
 from .component import (
     NodeQueryComponentController,
     NodeQueryComponentModel,
     NodeQueryComponentView,
 )
-from .filter import QueryFilterView, get_filter_view
+from .filter import QueryFilterController, QueryFilterModel, QueryFilterView
 
 
 class QueryFiltersController(NodeQueryComponentController):
@@ -16,7 +18,7 @@ class QueryFiltersController(NodeQueryComponentController):
 
     def _init_view(self) -> None:
         """docstring"""
-        default_filter = get_filter_view(self._model)
+        default_filter = self._get_filter_view()
         default_filter.join.value = None
         default_filter.join.layout.visibility = "hidden"
         default_filter.children += (default_filter.add,)
@@ -25,7 +27,7 @@ class QueryFiltersController(NodeQueryComponentController):
 
     def _add_filter(self, _=None) -> None:
         """docstring"""
-        view = get_filter_view(self._model)
+        view = self._get_filter_view()
         view.children += (view.remove,)
         view.observe(self._remove_filter, "closed")
         self._view.filters = [*self._view.filters, view]
@@ -44,6 +46,14 @@ class QueryFiltersController(NodeQueryComponentController):
     def _refresh(self, _=None) -> None:
         """docstring"""
         self._init_view()
+
+    def _get_filter_view(self) -> QueryFilterView:
+        """docstring"""
+        model = QueryFilterModel(self._model.aiida)
+        ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
+        view = QueryFilterView()
+        _ = QueryFilterController(model, view)
+        return view
 
 
 class QueryFiltersModel(NodeQueryComponentModel):
