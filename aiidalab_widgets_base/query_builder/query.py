@@ -23,8 +23,6 @@ class QBController:
         """docstring"""
         view = self._get_node_query_view()
         view.observe(self._remove_node_query, "closed")
-        view.move_up.on_click(lambda _: self._move_query_up(view))
-        view.move_down.on_click(lambda _: self._move_query_down(view))
         self._view.node_queries += (view,)
 
     def _remove_node_query(self, trait: dict) -> None:
@@ -37,22 +35,6 @@ class QBController:
             ),
         ]
         view.unobserve_all()
-
-    def _move_query_up(self, node_query_view: NodeQueryView) -> None:
-        """docstring"""
-        views = self._view.node_queries
-        index = views.index(node_query_view)
-        prev_index = index - 1
-        views[prev_index], views[index] = views[index], views[index - 1]
-        self._view.node_queries = views
-
-    def _move_query_down(self, node_query_view: NodeQueryView) -> None:
-        """docstring"""
-        views = self._view.node_queries
-        index = views.index(node_query_view)
-        next_index = (index + 1) % len(views)
-        views[next_index], views[index] = views[index], views[next_index]
-        self._view.node_queries = views
 
     def _submit_query(self, _=None) -> None:
         """docstring"""
