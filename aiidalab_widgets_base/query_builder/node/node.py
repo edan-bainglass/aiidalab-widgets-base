@@ -44,12 +44,6 @@ class NodeQueryController:
             GROUP_RELATIONSHIPS if is_group else NODE_RELATIONSHIPS
         )
 
-    def _move_query_up(self, _=None) -> None:
-        """docstring"""
-
-    def _move_query_down(self, _=None) -> None:
-        """docstring"""
-
     def _refresh(self, _=None) -> None:
         """docstring"""
         self._update_relationship_options()
@@ -85,8 +79,6 @@ class NodeQueryController:
         """docstring"""
         self._view.remove.on_click(self._close_view)
         self._view.reset.on_click(self._refresh)
-        self._view.move_up.on_click(self._move_query_up)
-        self._view.move_down.on_click(self._move_query_down)
         self._view.node_selector.observe(
             self._update_relationship_options,
             "value",
