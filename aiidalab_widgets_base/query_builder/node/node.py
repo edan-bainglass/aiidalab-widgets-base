@@ -146,20 +146,6 @@ class NodeQueryView(ipw.VBox):
             tooltip="Remove query",
         )
 
-        self.move_up = ipw.Button(
-            layout=CSS.BUTTON,
-            button_style="",
-            icon="arrow-up",
-            tooltip="Move up",
-        )
-
-        self.move_down = ipw.Button(
-            layout=CSS.BUTTON,
-            button_style="",
-            icon="arrow-down",
-            tooltip="Move down",
-        )
-
         self.filters: QueryFiltersView
         self.projections: QueryProjectionsView
 
@@ -194,13 +180,6 @@ class NodeQueryView(ipw.VBox):
                                     children=[
                                         self.reset,
                                         self.remove,
-                                    ],
-                                ),
-                                ipw.HBox(
-                                    layout={},
-                                    children=[
-                                        self.move_up,
-                                        self.move_down,
                                     ],
                                 ),
                             ],
