@@ -52,7 +52,7 @@ class AiiDAService:
             return []
         node = self.get_entry_point(entry_point)
         field = node.fields[field_name]
-        if field.qb_field == "attributes.value":
+        if field.key == "value":
             if isinstance(node, orm.Str):
                 return _LITERAL_OPERATORS
             if issubclass(node, orm.NumericType):
@@ -89,7 +89,7 @@ class AiiDAService:
 
         if "in" in operator:
             value = f"[{value}]"
-        elif field.qb_field == "attributes.value":
+        elif field.key == "value":
             if isinstance(node, orm.Str):
                 pass  # HANDLE
             if issubclass(node, orm.NumericType) and not is_numeric(value):

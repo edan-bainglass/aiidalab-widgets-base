@@ -175,13 +175,13 @@ class QBModel(traitlets.HasTraits):
         filter: dict,
     ) -> orm.QbFieldFilters:
         """docstring"""
-        field, not_, op, value = filter.values()
-        qb_field = node.fields[field]
+        key, not_, op, value = filter.values()
+        field = node.fields[key]
         operator = f"!{op}" if not_ else op
         if "in" in operator:
             value = f"[{value}]"
         value = self.aiida.cast_filter_value(value)
-        return orm.QbFieldFilters([(qb_field, operator, value)])
+        return orm.QbFieldFilters([(field, operator, value)])
 
     def _process_projections(self, node: orm.Node, projections: dict):
         """docstring"""
