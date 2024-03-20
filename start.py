@@ -8,6 +8,7 @@ TEMPLATE = """
   <th style="text-align:center">Processes.</th>
   <th style="width:70px" rowspan=2></th>
   <th style="text-align:center">Electronic Lab Notebook.</th>
+  <th style="text-align:center">Explore.</th>
 <tr>
   <td valign="top"><ul>
     <li><a href="{appbase}/notebooks/process_list.ipynb" target="_blank">Process list</a></li>
@@ -15,6 +16,9 @@ TEMPLATE = """
   </ul></td>
   <td valign="top"><ul>
     <li><a href="{appbase}/notebooks/eln_configure.ipynb" target="_blank">Configure ELN</a></li>
+  </ul></td>
+  <td valign="top"><ul>
+    <li><a href="{appbase}/notebooks/query.ipynb" target="_blank">Query database</a></li>
   </ul></td>
 </tr>
 </table>
