@@ -23,6 +23,7 @@ class QueryFiltersController(NodeQueryComponentController):
         default_filter = self._add_filter()
         default_filter.join.value = None
         default_filter.join.layout.visibility = "hidden"
+        default_filter.remove.layout.visibility = "hidden"
 
     def _add_filter(self, _=None) -> QueryFilterView:
         """docstring"""

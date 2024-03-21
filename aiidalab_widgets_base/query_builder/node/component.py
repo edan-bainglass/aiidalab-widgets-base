@@ -105,11 +105,11 @@ class NodeQueryComponentView(ipw.VBox):
             },
             children=[
                 self.content,
-                ipw.HBox(
+                ipw.VBox(
                     layout=CSS.FLOAT_RIGHT,
                     children=[
-                        self.reset,
                         self.collapse,
+                        self.reset,
                     ],
                 ),
             ],

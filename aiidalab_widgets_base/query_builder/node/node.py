@@ -146,6 +146,20 @@ class NodeQueryView(ipw.VBox):
             tooltip="Remove query",
         )
 
+        self.node_selection_container = ipw.HBox(
+            children=[
+                self.node_selector,
+                self.my_tag,
+            ],
+        )
+
+        self.relationship_container = ipw.HBox(
+            children=[
+                self.relationship,
+                self.their_tag,
+            ],
+        )
+
         self.filters: QueryFiltersView
         self.projections: QueryProjectionsView
 
@@ -158,28 +172,18 @@ class NodeQueryView(ipw.VBox):
                         ipw.VBox(
                             layout=CSS.FLEX1,
                             children=[
-                                ipw.HBox(
-                                    children=[
-                                        self.node_selector,
-                                        self.my_tag,
-                                    ],
-                                ),
-                                ipw.HBox(
-                                    children=[
-                                        self.relationship,
-                                        self.their_tag,
-                                    ],
-                                ),
+                                self.node_selection_container,
+                                self.relationship_container,
                             ],
                         ),
                         ipw.VBox(
                             layout={},
                             children=[
-                                ipw.HBox(
+                                ipw.VBox(
                                     layout={},
                                     children=[
-                                        self.reset,
                                         self.remove,
+                                        self.reset,
                                     ],
                                 ),
                             ],

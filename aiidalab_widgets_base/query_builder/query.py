@@ -17,15 +17,23 @@ class QBController:
         self._model = model
         self._view = view
         self._set_event_handlers()
-        self._add_node_query()
+        self._init_view()
 
-    def _add_node_query(self, _=None) -> None:
+    def _init_view(self, _=None) -> None:
+        """docstring"""
+        self._view.node_queries = []
+        node_query = self._add_node_query()
+        node_query.remove.layout.display = "none"
+        node_query.relationship_container.layout.display = "none"
+
+    def _add_node_query(self, _=None) -> NodeQueryView:
         """docstring"""
         view = self._get_node_query_view()
         view.observe(self._remove_node_query, "closed")
         self._view.node_queries += (view,)
+        return view
 
-    def _remove_node_query(self, trait: dict) -> None:
+    def _remove_node_query(self, trait: dict) -> NodeQueryView:
         """docstring"""
         view: NodeQueryView = trait["owner"]
         self._view.node_queries = [
@@ -35,6 +43,7 @@ class QBController:
             ),
         ]
         view.unobserve_all()
+        return view
 
     def _submit_query(self, _=None) -> None:
         """docstring"""
@@ -196,7 +205,7 @@ class QBView(ipw.VBox):
     def __init__(self, **kwargs) -> None:
         """docstring"""
 
-        self.node_queries_div = ipw.VBox()
+        self.node_queries_container = ipw.VBox()
 
         self.add = ipw.Button(
             layout={
@@ -210,7 +219,7 @@ class QBView(ipw.VBox):
 
         super().__init__(
             children=[
-                self.node_queries_div,
+                self.node_queries_container,
                 ipw.VBox(
                     layout={
                         **CSS.PY5,
@@ -266,9 +275,9 @@ class QBView(ipw.VBox):
     @property
     def node_queries(self) -> list[NodeQueryView]:
         """docstring"""
-        return list(self.node_queries_div.children)
+        return list(self.node_queries_container.children)
 
     @node_queries.setter
     def node_queries(self, queries=list[NodeQueryView]) -> None:
         """docstring"""
-        self.node_queries_div.children = queries
+        self.node_queries_container.children = queries
