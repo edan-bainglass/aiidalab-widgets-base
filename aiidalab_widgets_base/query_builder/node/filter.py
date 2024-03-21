@@ -97,15 +97,8 @@ class QueryFilterView(ipw.HBox):
     def __init__(self, **kwargs):
         """docstring"""
 
-        self.add = ipw.Button(
-            layout=CSS.BUTTON,
-            button_style="",
-            icon="plus",
-            tooltip="Add filter",
-        )
-
         self.remove = ipw.Button(
-            layout=CSS.BUTTON,
+            layout={"width": "41px"},
             button_style="danger",
             icon="trash",
             tooltip="Remove filter",
@@ -160,6 +153,7 @@ class QueryFilterView(ipw.HBox):
                 self.operator,
                 self.argument,
                 self.close_,
+                self.remove,
             ],
         )
 

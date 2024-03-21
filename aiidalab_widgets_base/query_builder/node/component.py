@@ -23,6 +23,7 @@ class NodeQueryComponentController:
 
     def _init_view(self) -> None:
         """docstring"""
+        raise NotImplementedError()
 
     def _show_view(self, _=None) -> None:
         """docstring"""
