@@ -61,21 +61,20 @@ class AiiDAService:
                 return _ITERABLE_OPERATORS
             if isinstance(node, orm.Dict):
                 return _DICTIONARY_OPERATORS
-        dtype = _extract_field_type(field.dtype)
-        if dtype is str:
+        if field.dtype is str:
             return _LITERAL_OPERATORS
-        if dtype in (int, float, datetime.date, datetime.datetime):
+        if field.dtype in (int, float, datetime.date, datetime.datetime):
             return _NUMERICAL_OPERATORS
-        if dtype in (list, tuple):
+        if field.dtype in (list, tuple):
             return _ITERABLE_OPERATORS
-        if dtype is dict:
+        if field.dtype is dict:
             return _DICTIONARY_OPERATORS
         return _GENERAL_OPERATORS
 
     def get_entry_point(self, entry_point: str) -> orm.Node:
         """docstring"""
         group, name = entry_point.split("_")
-        return BaseFactory(group, name)
+        return BaseFactory(group, name)  # type: ignore
 
     def validate_filter(
         self,
@@ -99,15 +98,13 @@ class AiiDAService:
             if isinstance(node, orm.List) and not is_iterable(value):
                 return False
         else:
-            dtype = _extract_field_type(field.dtype)
-
-            if dtype is str:
+            if field.dtype is str:
                 # TODO needs work (handle ', ", and combo cases)
                 value = f"'{value}'"
 
             try:
                 cast = self.cast_filter_value(value)
-                if not isinstance(cast, dtype):
+                if not isinstance(cast, field.dtype):
                     return False
             except Exception:
                 return False
@@ -121,16 +118,10 @@ class AiiDAService:
 
     def cast_filter_value(self, value: str) -> t.Any:
         """docstring"""
-        return safe_load(value)
-
-
-def _extract_field_type(dtype: t.Any) -> t.Any:
-    """docstring"""
-    if origin := t.get_origin(dtype):
-        return t.get_args(dtype)[0] if origin is t.Union else origin
-    if dtype is datetime.datetime:
-        return datetime.datetime  # VERIFY
-    return dtype
+        cast = safe_load(value)
+        if isinstance(cast, datetime.date):
+            cast = datetime.datetime.combine(cast, datetime.time.min)
+        return cast
 
 
 def is_numeric(value: str) -> bool:
