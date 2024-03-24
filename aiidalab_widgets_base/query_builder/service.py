@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import typing as t
+from collections import OrderedDict
 
 import aiida.plugins.entry_point as ep
 from aiida import orm
@@ -61,13 +62,14 @@ class AiiDAService:
                 return _ITERABLE_OPERATORS
             if isinstance(node, orm.Dict):
                 return _DICTIONARY_OPERATORS
-        if field.dtype is str:
+        dtype = field.get_root_type()
+        if dtype is str:
             return _LITERAL_OPERATORS
-        if field.dtype in (int, float, datetime.date, datetime.datetime):
+        if dtype in (int, float, datetime.date, datetime.datetime):
             return _NUMERICAL_OPERATORS
-        if field.dtype in (list, tuple):
+        if dtype in (list, tuple):
             return _ITERABLE_OPERATORS
-        if field.dtype is dict:
+        if dtype is dict:
             return _DICTIONARY_OPERATORS
         return _GENERAL_OPERATORS
 
@@ -191,5 +193,16 @@ _ITERABLE_OPERATORS = [
 _DICTIONARY_OPERATORS = [
     *_GENERAL_OPERATORS,
     "has_key",
-    "of_type",
 ]
+
+_ATTRIBUTE_OPERATORS = list(
+    OrderedDict.fromkeys(
+        [
+            *_NUMERICAL_OPERATORS,
+            *_LITERAL_OPERATORS,
+            *_ITERABLE_OPERATORS,
+            *_DICTIONARY_OPERATORS,
+            "of_type",
+        ]
+    )
+)
