@@ -114,8 +114,8 @@ class NodeQueryView(ipw.VBox):
             description="Node:",
         )
 
-        self.my_tag = ipw.Text(
-            layout=CSS.TAG_TEXTBOX,
+        self.tag = ipw.Text(
+            layout=CSS.TAG_INPUTBOX,
             style=CSS.TIGHT_DESCRIPTION,
             placeholder="tag",
         )
@@ -126,10 +126,14 @@ class NodeQueryView(ipw.VBox):
             description="with:",
         )
 
-        self.their_tag = ipw.Text(
-            layout=CSS.TAG_TEXTBOX,
+        self.their_tag = ipw.Dropdown(
+            layout=CSS.TAG_INPUTBOX,
             style=CSS.TIGHT_DESCRIPTION,
-            placeholder="other tag",
+        )
+
+        self.their_tag_info = ipw.HTML(
+            layout={"margin": "2px 2px 2px 5px"},
+            value="<i class='fa fa-info' title='Choose other tag'></i>",
         )
 
         self.reset = ipw.Button(
@@ -149,7 +153,7 @@ class NodeQueryView(ipw.VBox):
         self.node_selection_container = ipw.HBox(
             children=[
                 self.node_selector,
-                self.my_tag,
+                self.tag,
             ],
         )
 
@@ -157,6 +161,7 @@ class NodeQueryView(ipw.VBox):
             children=[
                 self.relationship,
                 self.their_tag,
+                self.their_tag_info,
             ],
         )
 
@@ -195,11 +200,15 @@ class NodeQueryView(ipw.VBox):
         )
 
     @property
+    def tag_key(self) -> str:
+        return str(id(self))
+
+    @property
     def state(self) -> dict:
         """docstring"""
         state = {
             "node": self.node_selector.value,
-            "tag": self.my_tag.value,
+            "tag": self.tag.value,
             "filters": self.filters.state,
             "projections": self.projections.state,
         }

@@ -29,13 +29,49 @@ class QBController:
     def _add_node_query(self, _=None) -> NodeQueryView:
         """docstring"""
         view = self._get_node_query_view()
+        view.their_tag.options = [""] + self._model.get_tags()
         view.observe(self._remove_node_query, "closed")
+        view.tag.observe(lambda _: self._update_tags(view), "value")
         self._view.node_queries += (view,)
         return view
+
+    def _update_tags(self, view: NodeQueryView) -> None:
+        """docstring"""
+        self._update_view_tag(view)
+        self._update_other_tags(view)
+
+    def _update_view_tag(self, view: NodeQueryView) -> None:
+        """docstring"""
+        if self._check_tag_validity(view):
+            self._model.set_tag(view.tag_key, view.tag.value)
+        else:
+            self._model.discard_tag(view.tag_key)
+
+    def _update_other_tags(self, view: NodeQueryView) -> None:
+        for node_query in self._view.node_queries:
+            if node_query is view:
+                continue
+            self._update_view_tag(node_query)
+            all_tags = self._model.get_tags()
+            node_query_tag = node_query.tag.value if node_query.is_valid else ""
+            their_tags = [tag for tag in all_tags if tag != node_query_tag]
+            node_query.their_tag.options = [""] + their_tags
+
+    def _check_tag_validity(self, view: NodeQueryView) -> bool:
+        """docstring"""
+        if self._model.has_tag(view):
+            view.tag.add_class("bad-text-input")
+            view.is_valid = False
+            return False
+        view.tag.remove_class("bad-text-input")
+        view.is_valid = True
+        return True
 
     def _remove_node_query(self, trait: dict) -> NodeQueryView:
         """docstring"""
         view: NodeQueryView = trait["owner"]
+        self._model.discard_tag(view.tag_key)
+        self._update_other_tags(view)
         self._view.node_queries = [
             *filter(
                 lambda node_query: node_query != view,
@@ -43,6 +79,7 @@ class QBController:
             ),
         ]
         view.unobserve_all()
+        self._toggle_validity()
         return view
 
     def _submit_query(self, _=None) -> None:
@@ -85,6 +122,8 @@ class QBController:
 class QBModel(traitlets.HasTraits):
     """docstring"""
 
+    _tags = {}
+
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
         self.aiida = service
@@ -97,6 +136,29 @@ class QBModel(traitlets.HasTraits):
             args = self._process_query_args(node, node_query)
             query.append((node, args))
         self.aiida.submit(query)
+
+    def has_tag(self, view: NodeQueryView) -> bool:
+        """docstring"""
+        return any(
+            tag == view.tag.value and key != view.tag_key
+            for key, tag in self._tags.items()
+        )
+
+    def set_tag(self, key: str, tag: str) -> None:
+        """docstring"""
+        if tag:
+            self._tags[key] = tag
+        else:
+            self.discard_tag(key)
+
+    def discard_tag(self, key: str) -> None:
+        """docstring"""
+        if key in self._tags:
+            del self._tags[key]
+
+    def get_tags(self) -> list[str]:
+        """docstring"""
+        return list(self._tags.values())
 
     def _process_query_args(self, node: orm.Node, query: dict) -> dict:
         """docstring"""
