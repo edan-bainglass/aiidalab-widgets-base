@@ -96,7 +96,7 @@ class CSS:
         "description_width": "75px",
     }
 
-    TAG_TEXTBOX = {
+    TAG_INPUTBOX = {
         "width": "100px",
     }
 
