@@ -57,6 +57,7 @@ class QueryProjectionsModel(NodeQueryComponentModel):
         """docstring"""
         return self.aiida.get_fields(self.entry_point)
 
+
 class QueryProjectionsView(NodeQueryComponentView):
     """docstring"""
 
