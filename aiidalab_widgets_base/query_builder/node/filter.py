@@ -18,14 +18,14 @@ class QueryFilterController:
         """docstring"""
         self._model = model
         self._view = view
-        self._init_view()
         self._set_event_handlers()
+        self._init_view()
 
     def _init_view(self) -> None:
         """docstring"""
         self._view.field.options = self._model.get_fields()
-        field = self._view.field.value
-        self._view.operator.options = self._model.get_operators(field)
+        if "pk" in self._view.field.options:
+            self._view.field.value = "pk"
 
     def _close_view(self, _=None) -> None:
         """docstring"""
@@ -48,6 +48,10 @@ class QueryFilterController:
     def _refresh(self, _=None) -> None:
         """docstring"""
         self._init_view()
+
+    def _update_operators(self, change: dict) -> None:
+        """docstring"""
+        self._view.operator.options = self._model.get_operators(change["new"])
         self._view.operator.value = "=="
         self._view.argument.value = ""
 
@@ -63,7 +67,9 @@ class QueryFilterController:
         """docstring"""
         self._view.remove.on_click(self._close_view)
         self._view.argument.observe(self._validate, "value")
-        self._view.field.observe(self._refresh, "value")
+        self._view.field.observe(self._update_operators, "value")
+        self._view.observe(self._refresh_all, "reset_trigger")
+        self._model.observe(self._refresh, "entry_point")
 
 
 class QueryFilterModel(traitlets.HasTraits):
@@ -77,11 +83,17 @@ class QueryFilterModel(traitlets.HasTraits):
 
     def get_fields(self) -> list[str]:
         """docstring"""
-        return self.aiida.get_fields(self.entry_point)
+        if self.entry_point:
+            return self.aiida.get_fields(self.entry_point)
+        else:
+            return [""]
 
     def get_operators(self, field: str) -> list[str]:
         """docstring"""
-        return self.aiida.get_operators(self.entry_point, field)
+        if self.entry_point:
+            return self.aiida.get_operators(self.entry_point, field)
+        else:
+            return ["==", "in"]
 
     def validate(self, filter_args: dict) -> bool:
         """docstring"""
@@ -91,6 +103,7 @@ class QueryFilterModel(traitlets.HasTraits):
 class QueryFilterView(ipw.HBox):
     """docstring"""
 
+    reset_trigger = traitlets.Int(0)
     closed = traitlets.Bool(False)
     is_valid = traitlets.Bool(True)
 
@@ -117,7 +130,8 @@ class QueryFilterView(ipw.HBox):
         )
 
         self.field = ipw.Dropdown(
-            layout=CSS.W50,
+            layout=CSS.FLEX1,
+            options=[""],
         )
 
         self.not_ = ipw.ToggleButton(
@@ -129,6 +143,7 @@ class QueryFilterView(ipw.HBox):
 
         self.operator = ipw.Dropdown(
             layout=CSS.OPERATOR_SELECTOR,
+            options=["==", "in"],
             default="==",
         )
 

@@ -21,15 +21,15 @@ class NodeQueryController:
         """docstring"""
         self._model = model
         self._view = view
-        self._init_view()
         self._set_event_handlers()
+        self._init_view()
 
     def _init_view(self) -> None:
         """docstring"""
         self._view.filters = self._get_component_view("filters")
         self._view.projections = self._get_component_view("projections")
         self._view.children += (self._view.filters, self._view.projections)
-        self._view.node_selector.options = self._model.aiida.get_nodes()
+        self._view.node_selector.options = [("", "")] + self._model.aiida.get_nodes()
         self._update_relationship_options()
 
     def _close_view(self, _=None) -> None:
@@ -112,6 +112,7 @@ class NodeQueryView(ipw.VBox):
             layout=CSS.M2,
             style=CSS.NODE_QUERY_SELECTOR,
             description="Node:",
+            options=[("", "")],
         )
 
         self.tag = ipw.Text(
@@ -124,11 +125,13 @@ class NodeQueryView(ipw.VBox):
             layout=CSS.M2,
             style=CSS.NODE_QUERY_SELECTOR,
             description="with:",
+            options=[""],
         )
 
         self.their_tag = ipw.Dropdown(
             layout=CSS.TAG_INPUTBOX,
             style=CSS.TIGHT_DESCRIPTION,
+            options=[""],
         )
 
         self.their_tag_info = ipw.HTML(

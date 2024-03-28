@@ -18,8 +18,8 @@ class NodeQueryComponentController:
         """docstring"""
         self._model = model
         self._view = view
-        self._init_view()
         self._set_event_handlers()
+        self._init_view()
 
     def _init_view(self) -> None:
         """docstring"""
