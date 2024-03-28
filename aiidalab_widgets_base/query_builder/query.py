@@ -8,6 +8,11 @@ from .node import NodeQueryController, NodeQueryModel, NodeQueryView
 from .service import AiiDAService
 from .styles import CSS
 
+PRECEDENCE = {
+    "and": 1,
+    "or": 0,
+}
+
 
 class QBController:
     """docstring"""
@@ -29,7 +34,7 @@ class QBController:
     def _add_node_query(self, _=None) -> NodeQueryView:
         """docstring"""
         view = self._get_node_query_view()
-        view.their_tag.options = [""] + self._model.get_tags()
+        view.their_tag.options = ["", *self._model.get_tags()]
         view.observe(self._remove_node_query, "closed")
         view.tag.observe(lambda _: self._update_tags(view), "value")
         self._view.node_queries += (view,)
@@ -55,7 +60,7 @@ class QBController:
             all_tags = self._model.get_tags()
             node_query_tag = node_query.tag.value if node_query.is_valid else ""
             their_tags = [tag for tag in all_tags if tag != node_query_tag]
-            node_query.their_tag.options = [""] + their_tags
+            node_query.their_tag.options = ["", *their_tags]
 
     def _check_tag_validity(self, view: NodeQueryView) -> bool:
         """docstring"""
@@ -176,11 +181,6 @@ class QBModel(traitlets.HasTraits):
         filters: list[dict],
     ) -> orm.QbFieldFilters:
         """docstring"""
-
-        PRECEDENCE = {
-            "and": 1,
-            "or": 0,
-        }
 
         filter_stack: list[orm.QbFieldFilters] = []
         operator_stack: list[str] = []
