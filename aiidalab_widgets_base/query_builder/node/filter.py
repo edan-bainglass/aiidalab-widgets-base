@@ -55,9 +55,16 @@ class QueryFilterController:
         else:
             self._view.attr_field.layout.display = "none"
 
-    def _toggle_validation_notice(self, change: dict) -> None:
+    def _toggle_attr_field_rules(self, change: dict) -> None:
         """docstring"""
-        if change["new"]:
+        has_attr_field_value = bool(change["new"])
+        self._toggle_validation_notice(has_attr_field_value)
+        self._model._needs_validation = not has_attr_field_value
+        self._validate()
+
+    def _toggle_validation_notice(self, has_attr_field_value: str) -> None:
+        """docstring"""
+        if has_attr_field_value:
             self._view.validation_info.layout.display = "inline-block"
         else:
             self._view.validation_info.layout.display = "none"
@@ -86,7 +93,7 @@ class QueryFilterController:
         self._view.argument.observe(self._validate, "value")
         self._view.field.observe(self._update_operators, "value")
         self._view.field.observe(self._toggle_attr_field, "value")
-        self._view.attr_field.observe(self._toggle_validation_notice, "value")
+        self._view.attr_field.observe(self._toggle_attr_field_rules, "value")
         self._view.observe(self._refresh_all, "reset_trigger")
         self._model.observe(self._refresh, "entry_point")
 
@@ -95,6 +102,7 @@ class QueryFilterModel(traitlets.HasTraits):
     """docstring"""
 
     entry_point = traitlets.Unicode("")
+    _needs_validation = True
 
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
@@ -121,7 +129,9 @@ class QueryFilterModel(traitlets.HasTraits):
 
     def validate(self, filter_args: dict) -> bool:
         """docstring"""
-        return self.aiida.validate_filter(self.entry_point, filter_args)
+        if self._needs_validation:
+            return self.aiida.validate_filter(self.entry_point, filter_args)
+        return True
 
 
 class QueryFilterView(ipw.HBox):
@@ -165,7 +175,12 @@ class QueryFilterView(ipw.HBox):
 
         self.validation_info = ipw.HTML(
             layout={**CSS.MX5, **CSS.HIDDEN},
-            value="<i class='fa fa-info' title='Validation is turned off for attribute fields'></i>",
+            value="""
+                <i
+                    class="fa fa-info"
+                    title="No validation for dictionary fields"
+                ></i>
+            """,
         )
 
         self.not_ = ipw.ToggleButton(
