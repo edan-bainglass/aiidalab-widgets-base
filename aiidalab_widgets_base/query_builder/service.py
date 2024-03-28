@@ -52,10 +52,17 @@ class AiiDAService:
         node = self.get_entry_point(entry_point)
         return node.fields[field_name]
 
-    def get_operators(self, entry_point: str, field_name: str) -> list[str]:
+    def get_operators(
+        self,
+        entry_point: str,
+        field_name: str,
+        is_attr_field: bool = False,
+    ) -> list[str]:
         """docstring"""
         if not entry_point or not field_name:
             return []
+        if is_attr_field:
+            return _ATTRIBUTE_OPERATORS
         node = self.get_entry_point(entry_point)
         field = node.fields[field_name]
         if field.key == "value":

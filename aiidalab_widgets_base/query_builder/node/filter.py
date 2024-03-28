@@ -57,9 +57,10 @@ class QueryFilterController:
 
     def _toggle_attr_field_rules(self, change: dict) -> None:
         """docstring"""
-        has_attr_field_value = bool(change["new"])
-        self._toggle_validation_notice(has_attr_field_value)
-        self._model._needs_validation = not has_attr_field_value
+        has_attr_field = bool(change["new"])
+        self._toggle_validation_notice(has_attr_field)
+        self._update_operators(is_attr=has_attr_field)
+        self._model._needs_validation = not has_attr_field
         self._validate()
 
     def _toggle_validation_notice(self, has_attr_field_value: str) -> None:
@@ -73,9 +74,10 @@ class QueryFilterController:
         """docstring"""
         self._init_view()
 
-    def _update_operators(self, change: dict) -> None:
+    def _update_operators(self, _=None, is_attr=False) -> None:
         """docstring"""
-        self._view.operator.options = self._model.get_operators(change["new"])
+        field = self._view.field.value
+        self._view.operator.options = self._model.get_operators(field, is_attr)
         self._view.operator.value = "=="
         self._view.argument.value = ""
 
@@ -117,15 +119,13 @@ class QueryFilterModel(traitlets.HasTraits):
         """docstring"""
         if self.entry_point:
             return self.aiida.get_fields(self.entry_point)
-        else:
-            return [""]
+        return [""]
 
-    def get_operators(self, field: str) -> list[str]:
+    def get_operators(self, field: str, is_attr: bool = False) -> list[str]:
         """docstring"""
         if self.entry_point:
-            return self.aiida.get_operators(self.entry_point, field)
-        else:
-            return ["==", "in"]
+            return self.aiida.get_operators(self.entry_point, field, is_attr)
+        return ["==", "in"]
 
     def validate(self, filter_args: dict) -> bool:
         """docstring"""
@@ -191,7 +191,7 @@ class QueryFilterView(ipw.HBox):
         )
 
         self.operator = ipw.Dropdown(
-            layout=CSS.OPERATOR_SELECTOR,
+            layout={"width": "10%"},
             options=["==", "in"],
             default="==",
         )
@@ -222,7 +222,7 @@ class QueryFilterView(ipw.HBox):
                 self.not_,
                 self.operator,
                 ipw.HBox(
-                    layout=CSS.W50,
+                    layout={"width": "40%"},
                     children=[
                         self.argument,
                         self.validation_info,
