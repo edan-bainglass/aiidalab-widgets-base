@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing as t
+
 import ipywidgets as ipw
 import traitlets
 
@@ -45,6 +47,21 @@ class QueryFilterController:
             self._view.is_valid = True
             self._view.argument.remove_class("bad-text-input")
 
+    def _toggle_attr_field(self, change: dict) -> None:
+        """docstring"""
+        field_name = change["new"]
+        if field_name and self._model.get_field_type(field_name) is dict:
+            self._view.attr_field.layout.display = "flex"
+        else:
+            self._view.attr_field.layout.display = "none"
+
+    def _toggle_validation_notice(self, change: dict) -> None:
+        """docstring"""
+        if change["new"]:
+            self._view.validation_info.layout.display = "inline-block"
+        else:
+            self._view.validation_info.layout.display = "none"
+
     def _refresh(self, _=None) -> None:
         """docstring"""
         self._init_view()
@@ -68,6 +85,8 @@ class QueryFilterController:
         self._view.remove.on_click(self._close_view)
         self._view.argument.observe(self._validate, "value")
         self._view.field.observe(self._update_operators, "value")
+        self._view.field.observe(self._toggle_attr_field, "value")
+        self._view.attr_field.observe(self._toggle_validation_notice, "value")
         self._view.observe(self._refresh_all, "reset_trigger")
         self._model.observe(self._refresh, "entry_point")
 
@@ -80,6 +99,11 @@ class QueryFilterModel(traitlets.HasTraits):
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
         self.aiida = service
+
+    def get_field_type(self, field_name: str) -> t.Any:
+        """docstring"""
+        field = self.aiida.get_field(self.entry_point, field_name)
+        return field.get_root_type()
 
     def get_fields(self) -> list[str]:
         """docstring"""
@@ -134,6 +158,16 @@ class QueryFilterView(ipw.HBox):
             options=[""],
         )
 
+        self.attr_field = ipw.Text(
+            layout={**CSS.FLEX1, **CSS.HIDDEN},
+            placeholder="attribute",
+        )
+
+        self.validation_info = ipw.HTML(
+            layout={**CSS.MX5, **CSS.HIDDEN},
+            value="<i class='fa fa-info' title='Validation is turned off for attribute fields'></i>",
+        )
+
         self.not_ = ipw.ToggleButton(
             layout={"width": "50px"},
             style=CSS.TIGHT_DESCRIPTION,
@@ -148,7 +182,7 @@ class QueryFilterView(ipw.HBox):
         )
 
         self.argument = ipw.Text(
-            layout=CSS.W50,
+            layout=CSS.FLEX1,
             placeholder="value",
         )
 
@@ -163,10 +197,22 @@ class QueryFilterView(ipw.HBox):
             children=[
                 self.join,
                 self.open_,
-                self.field,
+                ipw.HBox(
+                    layout=CSS.W50,
+                    children=[
+                        self.field,
+                        self.attr_field,
+                    ],
+                ),
                 self.not_,
                 self.operator,
-                self.argument,
+                ipw.HBox(
+                    layout=CSS.W50,
+                    children=[
+                        self.argument,
+                        self.validation_info,
+                    ],
+                ),
                 self.close_,
                 self.remove,
             ],
