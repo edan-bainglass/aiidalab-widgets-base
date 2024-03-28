@@ -29,7 +29,7 @@ class NodeQueryController:
         self._view.filters = self._get_component_view("filters")
         self._view.projections = self._get_component_view("projections")
         self._view.children += (self._view.filters, self._view.projections)
-        self._view.node_selector.options = [("", "")] + self._model.aiida.get_nodes()
+        self._view.node_selector.options = [("", ""), *self._model.aiida.get_nodes()]
         self._update_relationship_options()
 
     def _close_view(self, _=None) -> None:
