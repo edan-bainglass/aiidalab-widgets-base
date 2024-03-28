@@ -104,10 +104,6 @@ class CSS:
         "width": "100px",
     }
 
-    OPERATOR_SELECTOR = {
-        "width": "15%",
-    }
-
     MULTISELECT = {
         **FLEX1,
         **P2,
