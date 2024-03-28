@@ -24,6 +24,10 @@ class CSS:
         "margin": "0 2px",
     }
 
+    MX5 = {
+        "margin": "2px 5px",
+    }
+
     P2 = {
         "padding": "2px",
     }

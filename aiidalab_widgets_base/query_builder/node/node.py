@@ -135,7 +135,7 @@ class NodeQueryView(ipw.VBox):
         )
 
         self.their_tag_info = ipw.HTML(
-            layout={"margin": "2px 2px 2px 5px"},
+            layout=CSS.MX5,
             value="<i class='fa fa-info' title='Choose other tag'></i>",
         )
 
