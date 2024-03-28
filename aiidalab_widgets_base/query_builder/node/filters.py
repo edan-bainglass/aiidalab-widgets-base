@@ -19,7 +19,6 @@ class QueryFiltersController(NodeQueryComponentController):
 
     def _init_view(self) -> None:
         """docstring"""
-        self._view.filters = []
         default_filter = self._add_filter()
         default_filter.join.value = None
         default_filter.join.layout.visibility = "hidden"
@@ -29,7 +28,7 @@ class QueryFiltersController(NodeQueryComponentController):
         """docstring"""
         view = self._get_filter_view()
         view.observe(self._remove_filter, "closed")
-        self._view.filters = [*self._view.filters, view]
+        self._view.filters_container.children += (view,)
         return view
 
     def _remove_filter(self, trait: dict) -> QueryFilterView:
@@ -46,7 +45,9 @@ class QueryFiltersController(NodeQueryComponentController):
 
     def _refresh(self, _=None) -> None:
         """docstring"""
-        self._init_view()
+        default_filter = self._view.filters[0]
+        self._view.filters = [default_filter]
+        default_filter.reset_trigger += 1
 
     def _toggle_validity(self, _=None) -> None:
         """docstring"""
