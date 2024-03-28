@@ -47,6 +47,11 @@ class AiiDAService:
         node = self.get_entry_point(entry_point)
         return list(node.fields._dict.keys())
 
+    def get_field(self, entry_point: str, field_name: str) -> orm.QbField:
+        """docstring"""
+        node = self.get_entry_point(entry_point)
+        return node.fields[field_name]
+
     def get_operators(self, entry_point: str, field_name: str) -> list[str]:
         """docstring"""
         if not entry_point or not field_name:
