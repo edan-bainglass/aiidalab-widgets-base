@@ -100,13 +100,13 @@ class AiiDAService:
             if isinstance(node, orm.List) and not is_iterable(value):
                 return False
         else:
-            if field.dtype is str:
+            if field.get_root_type() is str:
                 # TODO needs work (handle ', ", and combo cases)
                 value = f"'{value}'"
 
             try:
                 cast = self.cast_filter_value(value)
-                if not isinstance(cast, field.dtype):
+                if not isinstance(cast, field.get_root_type()):
                     return False
             except Exception:
                 return False
