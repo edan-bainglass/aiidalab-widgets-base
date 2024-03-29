@@ -117,9 +117,15 @@ class QBController:
         _ = NodeQueryController(model, view)
         return view
 
+    def _refresh(self, _=None) -> None:
+        """docstring"""
+        for node_query in self._view.node_queries:
+            node_query.reset_trigger += 1
+
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.add.on_click(self._add_node_query)
+        self._view.reset.on_click(self._refresh)
         self._view.submit.on_click(self._submit_query)
         self._view.observe(self._notify_validity, "is_valid")
 

@@ -40,13 +40,17 @@ class NodeQueryController:
     def _update_relationship_options(self, _=None) -> None:
         """docstring"""
         is_group = self._view.node_selector.label == "Group"
-        self._view.relationship.options = (
-            GROUP_RELATIONSHIPS if is_group else NODE_RELATIONSHIPS
-        )
+        relationships = GROUP_RELATIONSHIPS if is_group else NODE_RELATIONSHIPS
+        self._view.relationship.options = ["", *relationships]
 
     def _refresh(self, _=None) -> None:
         """docstring"""
-        self._update_relationship_options()
+        self._view.node_selector.value = ""
+        self._view.tag.value = ""
+        self._view.their_tag.value = ""
+        self._view.relationship.value = ""
+        self._view.filters.collapse.click()
+        self._view.projections.collapse.click()
 
     def _toggle_validity(self, _=None) -> None:
         """docstring"""
@@ -83,6 +87,7 @@ class NodeQueryController:
             self._update_relationship_options,
             "value",
         )
+        self._view.observe(self._refresh, "reset_trigger")
         ipw.dlink(
             (self._view.node_selector, "value"),
             (self._model, "entry_point"),
@@ -102,6 +107,7 @@ class NodeQueryModel(traitlets.HasTraits):
 class NodeQueryView(ipw.VBox):
     """docstring"""
 
+    reset_trigger = traitlets.Int(0)
     closed = traitlets.Bool(False)
     is_valid = traitlets.Bool(True)
 

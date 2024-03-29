@@ -163,14 +163,12 @@ BOOLEANS = {
 }
 
 NODE_RELATIONSHIPS = [
-    "",
     "outgoing",
     "incoming",
     "group",
 ]
 
 GROUP_RELATIONSHIPS = [
-    "",
     "node",
     "user",
 ]
