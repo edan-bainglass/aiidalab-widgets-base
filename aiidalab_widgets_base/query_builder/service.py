@@ -152,9 +152,9 @@ def is_iterable(value: str) -> bool:
     """docstring"""
     try:
         safe_load(value)
-        return True
     except Exception:
         return False
+    return True
 
 
 BOOLEANS = {

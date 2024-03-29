@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from aiidalab_widgets_base.query_builder.styles import CSS
 import ipywidgets as ipw
+
+from aiidalab_widgets_base.query_builder.styles import CSS
 
 from .component import (
     NodeQueryComponentController,
