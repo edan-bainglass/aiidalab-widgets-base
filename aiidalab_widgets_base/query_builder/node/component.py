@@ -44,6 +44,7 @@ class NodeQueryComponentController:
         self._view.reset.on_click(self._refresh)
         self._view.expand.on_click(self._show_view)
         self._view.collapse.on_click(self._hide_view)
+        self._view.observe(self._refresh, "reset_trigger")
         self._model.observe(self._refresh, "entry_point")
 
 
@@ -60,6 +61,7 @@ class NodeQueryComponentModel(traitlets.HasTraits):
 class NodeQueryComponentView(ipw.VBox):
     """docstring"""
 
+    reset_trigger = traitlets.Int(0)
     is_valid = traitlets.Bool(True)
 
     component_type = ""
