@@ -175,11 +175,19 @@ class QBModel(traitlets.HasTraits):
         """docstring"""
         filters = query.pop("filters")
         projections = query.pop("projections")
-        return {
-            "filters": self._process_filters(node, filters),
-            "project": self._process_projections(node, projections),
-            **query,
-        }
+        if filters:
+            query.update(
+                {
+                    "filters": self._process_filters(node, filters),
+                },
+            )
+        if projections:
+            query.update(
+                {
+                    "project": self._process_projections(node, projections),
+                }
+            )
+        return query
 
     def _process_filters(
         self,
@@ -268,7 +276,7 @@ class QBModel(traitlets.HasTraits):
 class QBView(ipw.VBox):
     """docstring"""
 
-    is_valid = traitlets.Bool(True)
+    is_valid = traitlets.Bool(None, allow_none=True)
 
     def __init__(self, **kwargs) -> None:
         """docstring"""
@@ -319,6 +327,7 @@ class QBView(ipw.VBox):
             button_style="success",
             icon="check",
             tooltip="Submit query",
+            disabled=True,
         )
 
         return ipw.VBox(
