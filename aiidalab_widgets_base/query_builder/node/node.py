@@ -37,6 +37,11 @@ class NodeQueryController:
         self._view.closed = True
         self._view.close()
 
+    def _on_value_change(self, _=None) -> None:
+        """docstring"""
+        self._toggle_validity()
+        self._update_relationship_options()
+
     def _update_relationship_options(self, _=None) -> None:
         """docstring"""
         is_group = self._view.node_selector.label == "Group"
@@ -52,10 +57,38 @@ class NodeQueryController:
         self._view.filters.collapse.click()
         self._view.projections.collapse.click()
 
+    def _has_valid_node(self) -> bool:
+        """docstring"""
+        if not self._view.node_selector.value:
+            self._view.node_selector.add_class("bad-dropdown-input")
+            return False
+        self._view.node_selector.remove_class("bad-dropdown-input")
+        return True
+
+    def _has_filters(self) -> bool:
+        """docstring"""
+        return len(self._view.filters.state) > 0
+
+    def _has_valid_filters(self) -> bool:
+        """docstring"""
+        has_valid_filters = bool(self._view.filters.is_valid)
+        return has_valid_filters if self._has_filters() else True
+
+    def _has_projections(self) -> bool:
+        """docstring"""
+        return len(self._view.projections.state) > 0
+
+    def _has_valid_projections(self) -> bool:
+        """docstring"""
+        has_valid_projections = bool(self._view.projections.is_valid)
+        return has_valid_projections if self._has_projections() else True
+
     def _toggle_validity(self, _=None) -> None:
         """docstring"""
         self._view.is_valid = (
-            self._view.filters.is_valid and self._view.projections.is_valid
+            self._has_valid_node()
+            and self._has_valid_filters()
+            and self._has_valid_projections()
         )
 
     def _get_component_view(self, type_: str) -> NodeQueryComponentView:
@@ -83,10 +116,7 @@ class NodeQueryController:
         """docstring"""
         self._view.remove.on_click(self._close_view)
         self._view.reset.on_click(self._refresh)
-        self._view.node_selector.observe(
-            self._update_relationship_options,
-            "value",
-        )
+        self._view.node_selector.observe(self._on_value_change, "value")
         self._view.observe(self._refresh, "reset_trigger")
         ipw.dlink(
             (self._view.node_selector, "value"),
@@ -109,7 +139,7 @@ class NodeQueryView(ipw.VBox):
 
     reset_trigger = traitlets.Int(0)
     closed = traitlets.Bool(False)
-    is_valid = traitlets.Bool(True)
+    is_valid = traitlets.Bool(None, allow_none=True)
 
     def __init__(self, **kwargs):
         """docstring"""

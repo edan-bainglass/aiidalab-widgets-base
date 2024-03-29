@@ -98,6 +98,11 @@ class QueryFilterController:
         self._view.attr_field.observe(self._toggle_attr_field_rules, "value")
         self._view.observe(self._refresh_all, "reset_trigger")
         self._model.observe(self._refresh, "entry_point")
+        ipw.dlink(
+            (self._view.field, "value"),
+            (self._view.argument, "disabled"),
+            lambda value: value == "",  # argument input disabled if no value
+        )
 
 
 class QueryFilterModel(traitlets.HasTraits):
@@ -199,6 +204,7 @@ class QueryFilterView(ipw.HBox):
         self.argument = ipw.Text(
             layout=CSS.FLEX1,
             placeholder="value",
+            disabled=True,
         )
 
         self.close_ = ipw.ToggleButton(
