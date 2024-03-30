@@ -275,9 +275,20 @@ class QBModel(traitlets.HasTraits):
         value = self.aiida.cast_filter_value(value)
         return orm.QbFieldFilters([(field, operator, value)])
 
-    def _process_projections(self, node: orm.Node, projections: dict):
+    def _process_projections(
+        self,
+        node: orm.Node,
+        projections: list[str],
+    ) -> list[orm.QbField]:
         """docstring"""
-        return [node.fields[projection] for projection in projections]
+        processed = []
+        for projection in projections:
+            if "." in projection:
+                field, attribute = projection.split(".", maxsplit=1)
+                processed.append(node.fields[field][attribute])
+            else:
+                processed.append(node.fields[projection])
+        return processed
 
 
 class QBView(ipw.VBox):

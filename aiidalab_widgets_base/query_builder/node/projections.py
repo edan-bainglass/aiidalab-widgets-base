@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import typing as t
+
 import ipywidgets as ipw
 
 from ..styles import CSS
@@ -27,6 +29,8 @@ class QueryProjectionsController(NodeQueryComponentController):
     def _select(self, all=False) -> None:
         """docstring"""
         selected = getattr(self._view.selector, "options" if all else "value")
+        if not all and self._view.attr_field.value:
+            selected = (f"{selected[0]}.{self._view.attr_field.value}",)
         options = self._view.selected.options
         self._view.selected.options = [*sorted({*options} | {*selected})]
 
@@ -35,6 +39,16 @@ class QueryProjectionsController(NodeQueryComponentController):
         selected = getattr(self._view.selected, "options" if all else "value")
         options = self._view.selected.options
         self._view.selected.options = [*sorted({*options} - {*selected})]
+
+    def _toggle_attr_field(self, change: dict) -> None:
+        """docstring"""
+        self._view.attr_field.value = ""
+        self._view.attr_field.layout.display = (
+            "flex"
+            if len(field_names := change["new"]) == 1
+            and self._model.get_field_type(field_names[0]) is dict
+            else "none"
+        )
 
     def _refresh(self, _=None) -> None:
         """docstring"""
@@ -48,10 +62,16 @@ class QueryProjectionsController(NodeQueryComponentController):
         self._view.select_all.on_click(lambda _: self._select(all=True))
         self._view.deselect.on_click(lambda _: self._deselect())
         self._view.deselect_all.on_click(lambda _: self._deselect(all=True))
+        self._view.selector.observe(self._toggle_attr_field, "value")
 
 
 class QueryProjectionsModel(NodeQueryComponentModel):
     """docstring"""
+
+    def get_field_type(self, field_name: str) -> t.Any:
+        """docstring"""
+        field = self.aiida.get_field(self.entry_point, field_name)
+        return field.get_root_type()
 
     def get_fields(self) -> list[str]:
         """docstring"""
@@ -75,6 +95,11 @@ class QueryProjectionsView(NodeQueryComponentView):
 
         self.selected = ipw.SelectMultiple(
             layout=CSS.MULTISELECT,
+        )
+
+        self.attr_field = ipw.Text(
+            layout={**CSS.FLEX1, **CSS.HIDDEN},
+            description="Attribute:",
         )
 
         self.select = ipw.Button(
@@ -121,8 +146,16 @@ class QueryProjectionsView(NodeQueryComponentView):
                     self.selected,
                 ],
             ),
+            ipw.HBox(
+                layout={},
+                children=[
+                    self.attr_field,
+                ],
+            ),
         ]
 
     @property
     def state(self) -> list:
-        return list(self.selected.options)
+        if self.container.layout.display != "none":
+            return list(self.selected.options)
+        return []

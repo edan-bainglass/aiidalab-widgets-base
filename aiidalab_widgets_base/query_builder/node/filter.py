@@ -49,11 +49,12 @@ class QueryFilterController:
 
     def _toggle_attr_field(self, change: dict) -> None:
         """docstring"""
-        field_name = change["new"]
-        if field_name and self._model.get_field_type(field_name) is dict:
-            self._view.attr_field.layout.display = "flex"
-        else:
-            self._view.attr_field.layout.display = "none"
+        self._view.attr_field.layout.display = (
+            "flex"
+            if (field_name := change["new"])
+            and self._model.get_field_type(field_name) is dict
+            else "none"
+        )
 
     def _toggle_attr_field_rules(self, change: dict) -> None:
         """docstring"""
