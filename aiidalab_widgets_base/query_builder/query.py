@@ -89,7 +89,11 @@ class QBController:
 
     def _submit_query(self, _=None) -> None:
         """docstring"""
-        node_queries = [node.state for node in self._view.node_queries]
+        node_queries = [
+            node_query.state
+            for node_query in self._view.node_queries
+            if node_query.is_valid
+        ]
         self._model.submit(node_queries)
 
     def _notify_validity(self, _=None) -> None:
@@ -106,7 +110,9 @@ class QBController:
     def _toggle_validity(self, _=None) -> None:
         """docstring"""
         self._view.is_valid = all(
-            node_query.is_valid for node_query in self._view.node_queries
+            node_query.is_valid
+            for node_query in self._view.node_queries
+            if node_query.is_valid != None  # noqa: E711
         )
 
     def _get_node_query_view(self) -> NodeQueryView:
