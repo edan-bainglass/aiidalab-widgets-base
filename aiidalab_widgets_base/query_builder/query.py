@@ -267,8 +267,13 @@ class QBModel(traitlets.HasTraits):
         filter: dict,
     ) -> orm.QbFieldFilters:
         """docstring"""
+        key: str
         key, not_, op, value = filter.values()
-        field = node.fields[key]
+        if "." in key:
+            field, attribute = key.split(".", maxsplit=1)
+            field = node.fields[field][attribute]
+        else:
+            field = node.fields[key]
         operator = f"!{op}" if not_ else op
         if "in" in operator:
             value = f"[{value}]"
