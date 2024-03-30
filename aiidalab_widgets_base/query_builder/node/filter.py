@@ -49,6 +49,7 @@ class QueryFilterController:
 
     def _toggle_attr_field(self, change: dict) -> None:
         """docstring"""
+        self._view.attr_field.value = ""
         self._view.attr_field.layout.display = (
             "flex"
             if (field_name := change["new"])
@@ -252,7 +253,7 @@ class QueryFilterView(ipw.HBox):
     def state_of_filter(self) -> dict:
         """docstring"""
         return {
-            "field": self.field.label,
+            "field": self._field,
             "not": self.not_.value,
             "operator": self.operator.value,
             "argument": self.argument.value,
@@ -270,3 +271,12 @@ class QueryFilterView(ipw.HBox):
             }
         )
         return state
+
+    @property
+    def _field(self) -> str:
+        """docstring"""
+        return (
+            self.field.value
+            if not self.attr_field.value
+            else f"{self.field.value}.{self.attr_field.value}"
+        )  # type: ignore

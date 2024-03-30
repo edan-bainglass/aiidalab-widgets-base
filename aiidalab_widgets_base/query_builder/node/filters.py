@@ -113,6 +113,6 @@ class QueryFiltersView(NodeQueryComponentView):
 
     @property
     def state(self) -> list:
-        if self.container.layout.display == "none":
-            return []
-        return [filter.state for filter in self.filters]
+        if self.container.layout.display != "none":
+            return [filter.state for filter in self.filters]
+        return []
