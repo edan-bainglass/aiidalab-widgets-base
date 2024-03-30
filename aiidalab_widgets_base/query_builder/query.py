@@ -125,8 +125,8 @@ class QBController:
 
     def _refresh(self, _=None) -> None:
         """docstring"""
-        for node_query in self._view.node_queries:
-            node_query.reset_trigger += 1
+        self._view.node_queries = self._view.node_queries[:1]
+        self._view.node_queries[0].reset_trigger += 1
 
     def _set_event_handlers(self) -> None:
         """docstring"""
