@@ -12,7 +12,11 @@ class QBResult(ipw.VBox):
         output = ipw.Output()
 
         super().__init__(
-            layout={},
+            layout={
+                "border": "1px solid #9e9e9e",
+                "margin": "2px",
+                "padding": "5px",
+            },
             children=[output],
         )
 
