@@ -102,10 +102,8 @@ class QBController:
             style = '"color: red;"'
             message = "Please correct invalid input"
             self._view.message.value = f"<span style={style}>{message}</span>"
-            self._view.submit.disabled = True
         else:
             self._view.message.value = ""
-            self._view.submit.disabled = False
 
     def _toggle_validity(self, _=None) -> None:
         """docstring"""
@@ -134,6 +132,11 @@ class QBController:
         self._view.reset.on_click(self._refresh)
         self._view.submit.on_click(self._submit_query)
         self._view.observe(self._notify_validity, "is_valid")
+        ipw.dlink(
+            (self._view, "is_valid"),
+            (self._view.submit, "disabled"),
+            lambda valid: not valid,
+        )
 
 
 class QBModel(traitlets.HasTraits):
