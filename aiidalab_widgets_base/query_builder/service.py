@@ -28,18 +28,16 @@ class AiiDAService:
         )
     ]
 
-    def submit(self, query: list[tuple[orm.Node, dict]]) -> str:
+    def submit(self, query: list[tuple[orm.Node, dict]]) -> list[t.Any]:
         """docstring"""
         qb = orm.QueryBuilder()
         for node, args in query:
             qb.append(node, **args)
         try:
             qb.limit(10)
-            results = qb.all(flat=True)
-            print(results)
+            return qb.all()
         except Exception as err:
-            return str(err)
-        return ""
+            return [str(err)]
 
     def get_nodes(self) -> list[tuple[str, str]]:
         """docstring"""

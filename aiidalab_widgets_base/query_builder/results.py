@@ -3,13 +3,7 @@ from __future__ import annotations
 import ipywidgets as ipw
 import traitlets
 
-
-def get_results_view() -> QBResultsView:
-    """docstring"""
-    model = QBResultsModel()
-    view = QBResultsView()
-    _ = QBResultsController(model, view)
-    return view
+from .result import QBResult
 
 
 class QBResultsController(ipw.VBox):
@@ -17,16 +11,27 @@ class QBResultsController(ipw.VBox):
 
     def __init__(
         self,
-        view: QBResultsView,
         model: QBResultsModel,
+        view: QBResultsView,
     ) -> None:
         """docstring"""
-        self._view = view
         self._model = model
+        self._view = view
+        self._set_event_handlers()
+
+    def _display_results(self, change: dict) -> None:
+        """docstring"""
+        self._view.children = [QBResult(result) for result in change["new"]]
+
+    def _set_event_handlers(self) -> None:
+        """docstring"""
+        self._model.observe(self._display_results, "results")
 
 
 class QBResultsModel(traitlets.HasTraits):
     """docstring"""
+
+    results = traitlets.List([])
 
 
 class QBResultsView(ipw.VBox):
