@@ -87,6 +87,7 @@ class NodeQueryController:
         """docstring"""
         self._view.is_valid = (
             self._has_valid_node()
+            and self._view.has_valid_tag
             and self._has_valid_filters()
             and self._has_valid_projections()
         )
@@ -118,6 +119,7 @@ class NodeQueryController:
         self._view.reset.on_click(self._refresh)
         self._view.node_selector.observe(self._on_value_change, "value")
         self._view.observe(self._refresh, "reset_trigger")
+        self._view.observe(self._toggle_validity, "has_valid_tag")
         ipw.dlink(
             (self._view.node_selector, "value"),
             (self._model, "entry_point"),
@@ -139,7 +141,8 @@ class NodeQueryView(ipw.VBox):
 
     reset_trigger = traitlets.Int(0)
     closed = traitlets.Bool(False)
-    is_valid = traitlets.Bool(None, allow_none=True)
+    is_valid = traitlets.Bool()
+    has_valid_tag = traitlets.Bool(True)
 
     def __init__(self, **kwargs):
         """docstring"""

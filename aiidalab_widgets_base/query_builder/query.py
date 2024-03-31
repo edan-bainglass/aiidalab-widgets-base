@@ -66,10 +66,10 @@ class QBController:
         """docstring"""
         if self._model.has_tag(view):
             view.tag.add_class("bad-text-input")
-            view.is_valid = False
+            view.has_valid_tag = False
             return False
         view.tag.remove_class("bad-text-input")
-        view.is_valid = True
+        view.has_valid_tag = True
         return True
 
     def _remove_node_query(self, trait: dict) -> NodeQueryView:
@@ -299,7 +299,7 @@ class QBModel(traitlets.HasTraits):
 class QBView(ipw.VBox):
     """docstring"""
 
-    is_valid = traitlets.Bool(None, allow_none=True)
+    is_valid = traitlets.Bool()
 
     def __init__(self, **kwargs) -> None:
         """docstring"""
