@@ -140,6 +140,7 @@ class QBModel(traitlets.HasTraits):
     """docstring"""
 
     _tags = {}
+    results = traitlets.List([])
 
     def __init__(self, service: AiiDAService) -> None:
         """docstring"""
@@ -152,8 +153,7 @@ class QBModel(traitlets.HasTraits):
             node = self.aiida.get_entry_point(node_query.pop("node"))
             args = self._process_query_args(node, node_query)
             query.append((node, args))
-        if response := self.aiida.submit(query):
-            print(response)
+        self.results = self.aiida.submit(query)
 
     def has_tag(self, view: NodeQueryView) -> bool:
         """docstring"""

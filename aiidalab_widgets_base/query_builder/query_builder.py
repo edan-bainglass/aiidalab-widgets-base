@@ -4,7 +4,7 @@ import ipywidgets as ipw
 
 from .guide import QueryBuilderGuide
 from .query import QBController, QBModel, QBView
-from .results import get_results_view
+from .results import QBResultsController, QBResultsModel, QBResultsView
 from .service import AiiDAService
 
 
@@ -22,24 +22,41 @@ class QueryBuilderWidget(ipw.VBox):
 
         service = AiiDAService()
 
-        tabs = ipw.Tab(
+        self.tabs = ipw.Tab(
             layout={},
             children=[
                 self._get_query_view(service),
-                get_results_view(),
+                self._get_results_view(),
                 QueryBuilderGuide(),
             ],
             selected_index=0,
         )
 
-        for i in range(len(tabs.children)):
-            tabs.set_title(i, self._TAB_LABELS[i])
+        for i in range(len(self.tabs.children)):
+            self.tabs.set_title(i, self._TAB_LABELS[i])
 
-        super().__init__(children=[tabs], **kwargs)
+        super().__init__(children=[self.tabs], **kwargs)
+
+        ipw.dlink(
+            (self.query_model, "results"),
+            (self.results_model, "results"),
+        )
+
+    def _switch_to_results(self, _=None) -> None:
+        """docstring"""
+        self.tabs.selected_index = 1
 
     def _get_query_view(self, service: AiiDAService) -> QBView:
         """docstring"""
-        model = QBModel(service)
+        self.query_model = QBModel(service)
         view = QBView()
-        _ = QBController(model, view)
+        view.submit.on_click(self._switch_to_results)
+        _ = QBController(self.query_model, view)
+        return view
+
+    def _get_results_view(self) -> QBResultsView:
+        """docstring"""
+        self.results_model = QBResultsModel()
+        view = QBResultsView()
+        _ = QBResultsController(self.results_model, view)
         return view
