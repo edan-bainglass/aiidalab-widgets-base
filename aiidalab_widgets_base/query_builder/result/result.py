@@ -6,7 +6,9 @@ import ipywidgets as ipw
 class QBResult(ipw.VBox):
     """docstring"""
 
-    def __init__(self, result: t.Any) -> None:
+    projections: dict[str, list] = {}
+
+    def __init__(self, result: list[t.Any]) -> None:
         """docstring"""
 
         output = ipw.Output()
@@ -21,4 +23,12 @@ class QBResult(ipw.VBox):
         )
 
         with output:
-            print(result)
+            if isinstance(result, str):
+                print(result.strip())
+            else:
+                for i, node in enumerate(self.projections):
+                    new_line = '\n' if i > 0 else ''
+                    print(f"{new_line}{node}\n{'=' * len(node)}")
+                    for projection in self.projections[node]:
+                        value = result.pop(0)
+                        print(f"{projection}: {value}")
