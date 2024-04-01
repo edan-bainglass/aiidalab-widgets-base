@@ -21,7 +21,14 @@ class QBResultsController(ipw.VBox):
 
     def _display_results(self, change: dict) -> None:
         """docstring"""
-        self._view.children = [QBResult(result) for result in change["new"]]
+        if change["new"]:
+            projections, results = change["new"]
+            QBResult.projections = projections
+            self._view.children = (
+                [QBResult(result) for result in results]
+                if results
+                else [QBResult("No results")]
+            )
 
     def _set_event_handlers(self) -> None:
         """docstring"""

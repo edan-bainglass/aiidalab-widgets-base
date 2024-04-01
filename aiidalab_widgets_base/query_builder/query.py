@@ -1,4 +1,5 @@
 from __future__ import annotations
+from collections import defaultdict
 
 import ipywidgets as ipw
 import traitlets
@@ -151,12 +152,26 @@ class QBModel(traitlets.HasTraits):
 
     def submit(self, node_queries: list[dict]) -> None:
         """docstring"""
-        query = []
+        query: list[tuple[orm.Node, dict]] = []
+        projections: dict[str, list] = defaultdict(lambda: [])
         for node_query in node_queries:
-            node = self.aiida.get_entry_point(node_query.pop("node"))
+            entry_point = node_query.pop("node")
+            node = self.aiida.get_entry_point(entry_point)
+            node_type = node.entry_point.attr
             args = self._process_query_args(node, node_query)
+            if "project" in args:
+                projections[node_type].extend(
+                    [
+                        p.key
+                        for p in args["project"]
+                        if p.key not in projections[node_type]
+                    ]
+                )
             query.append((node, args))
-        self.results = self.aiida.submit(query)
+        self.results = [
+            projections or {node_type: ["node"]},
+            self.aiida.get_results(query),
+        ]
 
     def has_tag(self, view: NodeQueryView) -> bool:
         """docstring"""
