@@ -28,7 +28,7 @@ class AiiDAService:
         )
     ]
 
-    def submit(self, query: list[tuple[orm.Node, dict]]) -> list[t.Any]:
+    def get_results(self, query: list[tuple[orm.Node, dict]]) -> list[t.Any]:
         """docstring"""
         qb = orm.QueryBuilder()
         for node, args in query:
