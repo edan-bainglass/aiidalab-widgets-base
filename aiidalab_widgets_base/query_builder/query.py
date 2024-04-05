@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from collections import defaultdict
 
 import ipywidgets as ipw
@@ -90,12 +91,7 @@ class QBController:
 
     def _submit_query(self, _=None) -> None:
         """docstring"""
-        node_queries = [
-            node_query.state
-            for node_query in self._view.node_queries
-            if node_query.is_valid
-        ]
-        self._model.submit(node_queries)
+        self._model.submit(self._view.valid_states)
 
     def _notify_validity(self, _=None) -> None:
         """docstring"""
@@ -122,6 +118,35 @@ class QBController:
         _ = NodeQueryController(model, view)
         return view
 
+    def _toggle_qb_view(self, _=None) -> None:
+        """docstring"""
+        self._view.qb_view.clear_output()
+        if self._view.qb_view.layout.display == "none":
+            self._display_qb()
+            self._view.qb_view.layout.display = "block"
+            self._view.refresh_qb_view.disabled = False
+        else:
+            self._view.qb_view.layout.display = "none"
+            self._view.refresh_qb_view.disabled = True
+
+    def _display_qb(self) -> None:
+        """docstring"""
+        with self._view.qb_view:
+            states = self._view.valid_states
+            code = self._model.get_query_builder_string(states)
+            print(code)
+
+    def _refresh_qb_view(self, _=None) -> None:
+        """docstring"""
+        self._view.qb_view.clear_output()
+        self._display_qb()
+
+    def _close_qb_view(self, _=None) -> None:
+        """docstring"""
+        self._view.qb_view.clear_output()
+        if self._view.toggle_qb_view.disabled:
+            self._view.qb_view.layout.display = "none"
+
     def _refresh(self, _=None) -> None:
         """docstring"""
         self._view.node_queries = self._view.node_queries[:1]
@@ -130,6 +155,9 @@ class QBController:
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.add.on_click(self._add_node_query)
+        self._view.toggle_qb_view.on_click(self._toggle_qb_view)
+        self._view.toggle_qb_view.observe(self._close_qb_view, "disabled")
+        self._view.refresh_qb_view.on_click(self._refresh_qb_view)
         self._view.reset.on_click(self._refresh)
         self._view.submit.on_click(self._submit_query)
         self._view.observe(self._notify_validity, "is_valid")
@@ -137,6 +165,10 @@ class QBController:
             (self._view, "is_valid"),
             (self._view.submit, "disabled"),
             lambda valid: not valid,
+        )
+        ipw.dlink(
+            (self._view.submit, "disabled"),
+            (self._view.toggle_qb_view, "disabled"),
         )
 
 
@@ -150,28 +182,36 @@ class QBModel(traitlets.HasTraits):
         """docstring"""
         self.aiida = service
 
+    def get_query_builder_string(self, node_queries: list[dict]) -> str:
+        """docstring"""
+        query, _ = self._build_query(node_queries)
+        code = "QueryBuilder()"
+        for item in query:
+            args: dict
+            node, args = item
+            code += ".append(\n"
+            code += f"    {node.__name__},\n"
+            for key, value in args.items():
+                if not value:
+                    continue
+                if key == "filters":
+                    filters: orm.fields.QbFieldFilters = value
+                    code += f"    filters={filters.as_dict()},\n"
+                elif key == "project":
+                    projections: list[orm.QbField] = value
+                    keys = [proj.backend_key for proj in projections]
+                    code += f"    project={keys},\n"
+                elif isinstance(value, str):
+                    code += f"    {key}='{value}',\n"
+                else:
+                    code += f"    {key}={value},\n"
+            code += ")"
+        return code
+
     def submit(self, node_queries: list[dict]) -> None:
         """docstring"""
-        query: list[tuple[orm.Node, dict]] = []
-        projections: dict[str, list] = defaultdict(lambda: [])
-        for node_query in node_queries:
-            entry_point = node_query.pop("node")
-            node = self.aiida.get_entry_point(entry_point)
-            node_type = node.entry_point.attr
-            args = self._process_query_args(node, node_query)
-            if "project" in args:
-                projections[node_type].extend(
-                    [
-                        p.key
-                        for p in args["project"]
-                        if p.key not in projections[node_type]
-                    ]
-                )
-            query.append((node, args))
-        self.results = [
-            projections or {node_type: ["node"]},
-            self.aiida.get_results(query),
-        ]
+        query, projections = self._build_query(node_queries)
+        self.results = [projections, self.aiida.get_results(query)]
 
     def has_tag(self, view: NodeQueryView) -> bool:
         """docstring"""
@@ -313,6 +353,26 @@ class QBModel(traitlets.HasTraits):
                 processed.append(node.fields[projection])
         return processed
 
+    def _build_query(self, node_queries: list[dict]) -> tuple[list, dict]:
+        """docstring"""
+        query: list[tuple[orm.Node, dict]] = []
+        projections: dict[str, list] = defaultdict(lambda: [])
+        for node_query in node_queries:
+            entry_point = node_query.pop("node")
+            node = self.aiida.get_entry_point(entry_point)
+            node_type = node.entry_point.attr
+            args = self._process_query_args(node, node_query)
+            if "project" in args:
+                projections[node_type].extend(
+                    [
+                        p.key
+                        for p in args["project"]
+                        if p.key not in projections[node_type]
+                    ]
+                )
+            query.append((node, args))
+        return query, projections or {node_type: ["node"]}
+
 
 class QBView(ipw.VBox):
     """docstring"""
@@ -347,6 +407,7 @@ class QBView(ipw.VBox):
                     ],
                 ),
                 self._build_controls_div(),
+                self.qb_view,
             ],
             **kwargs,
         )
@@ -354,7 +415,32 @@ class QBView(ipw.VBox):
     def _build_controls_div(self) -> ipw.VBox:
         """docstring"""
 
-        self.message = ipw.HTML()
+        self.toggle_qb_view = ipw.Button(
+            layout=CSS.WFIT,
+            button_style="primary",
+            icon="code",
+            tooltip="Show code",
+            disabled=True,
+        )
+
+        self.refresh_qb_view = ipw.Button(
+            layout=CSS.BUTTON,
+            button_style="warning",
+            icon="refresh",
+            tooltip="Refresh code",
+            disabled=True,
+        )
+
+        self.qb_view = ipw.Output(
+            layout={
+                "margin": "5px 2px 2px 2px",
+                "padding": "5px",
+                "border": "1px solid #D3D3D3",
+                "display": "none",
+            }
+        )
+
+        self.message = ipw.HTML(layout=CSS.MX5)
 
         self.reset = ipw.Button(
             layout=CSS.BUTTON,
@@ -377,7 +463,14 @@ class QBView(ipw.VBox):
                 ipw.HBox(
                     layout=CSS.SPACE_BETWEEN,
                     children=[
-                        self.message,
+                        ipw.HBox(
+                            layout={},
+                            children=[
+                                self.toggle_qb_view,
+                                self.refresh_qb_view,
+                                self.message,
+                            ],
+                        ),
                         ipw.HBox(
                             layout={},
                             children=[
@@ -399,3 +492,8 @@ class QBView(ipw.VBox):
     def node_queries(self, queries=list[NodeQueryView]) -> None:
         """docstring"""
         self.node_queries_container.children = queries
+
+    @property
+    def valid_states(self) -> list[dict]:
+        """docstring"""
+        return [query.state for query in self.node_queries if query.is_valid]
