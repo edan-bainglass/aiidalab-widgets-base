@@ -28,6 +28,8 @@ class QueryFilterController:
         self._view.field.options = self._model.get_fields()
         if "pk" in self._view.field.options:
             self._view.field.value = "pk"
+            self._view.operator.value = "=="
+            self._view.argument.value = ""
 
     def _close_view(self, _=None) -> None:
         """docstring"""
@@ -91,6 +93,15 @@ class QueryFilterController:
         self._view.not_.value = False
         self._view.close_.value = False
 
+    def _update_state(self, _=None) -> None:
+        """docstring"""
+        self._view.state = {
+            **self._view.state_of_filter,
+            "join": self._view.join.value,
+            "(": self._view.open_.value,
+            ")": self._view.close_.value,
+        }
+
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.remove.on_click(self._close_view)
@@ -100,10 +111,15 @@ class QueryFilterController:
         self._view.attr_field.observe(self._toggle_attr_field_rules, "value")
         self._view.observe(self._refresh_all, "reset_trigger")
         self._model.observe(self._refresh, "entry_point")
+
+        for item in self._view.__dict__.values():
+            if isinstance(item, ipw.ValueWidget):
+                item.observe(self._update_state, "value")
+
         ipw.dlink(
             (self._view.field, "value"),
             (self._view.argument, "disabled"),
-            lambda value: value == "",  # argument input disabled if no value
+            lambda value: value == "",  # argument disabled if no field
         )
 
 
@@ -147,6 +163,7 @@ class QueryFilterView(ipw.HBox):
     reset_trigger = traitlets.Int(0)
     closed = traitlets.Bool(False)
     is_valid = traitlets.Bool(True)
+    state = traitlets.Dict({})
 
     def __init__(self, **kwargs):
         """docstring"""
@@ -258,19 +275,6 @@ class QueryFilterView(ipw.HBox):
             "operator": self.operator.value,
             "argument": self.argument.value,
         }
-
-    @property
-    def state(self) -> dict:
-        """docstring"""
-        state = self.state_of_filter
-        state.update(
-            {
-                "join": self.join.value,
-                "(": self.open_.value,
-                ")": self.close_.value,
-            }
-        )
-        return state
 
     @property
     def _field(self) -> str:

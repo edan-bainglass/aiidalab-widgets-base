@@ -55,6 +55,10 @@ class QueryProjectionsController(NodeQueryComponentController):
         self._deselect(all=True)
         self._update_options()
 
+    def _update_state(self, _=None) -> None:
+        """docstring"""
+        self._view.state = list(self._view.selected.options)
+
     def _set_event_handlers(self) -> None:
         """docstring"""
         super()._set_event_handlers()
@@ -63,6 +67,7 @@ class QueryProjectionsController(NodeQueryComponentController):
         self._view.deselect.on_click(lambda _: self._deselect())
         self._view.deselect_all.on_click(lambda _: self._deselect(all=True))
         self._view.selector.observe(self._toggle_attr_field, "value")
+        self._view.selected.observe(self._update_state, "options")
 
 
 class QueryProjectionsModel(NodeQueryComponentModel):
@@ -153,9 +158,3 @@ class QueryProjectionsView(NodeQueryComponentView):
                 ],
             ),
         ]
-
-    @property
-    def state(self) -> list:
-        if self.container.layout.display != "none":
-            return list(self.selected.options)
-        return []
