@@ -247,6 +247,26 @@ class QBModel(traitlets.HasTraits):
         """docstring"""
         return list(self._tags.values())
 
+    def _build_query(self, node_queries: list[dict]) -> tuple[list, dict]:
+        """docstring"""
+        query: list[tuple[orm.Node, dict]] = []
+        projections: dict[str, list] = defaultdict(lambda: [])
+        for node_query in node_queries:
+            entry_point = node_query.pop("node")
+            node = self.aiida.get_entry_point(entry_point)
+            node_type = node.entry_point.attr
+            args = self._process_query_args(node, node_query)
+            if "project" in args:
+                projections[node_type].extend(
+                    [
+                        p.key
+                        for p in args["project"]
+                        if p.key not in projections[node_type]
+                    ]
+                )
+            query.append((node, args))
+        return query, projections or {node_type: ["node"]}
+
     def _process_query_args(self, node: orm.Node, query: dict) -> dict:
         """docstring"""
         filters = query.pop("filters")
@@ -363,26 +383,6 @@ class QBModel(traitlets.HasTraits):
             else:
                 processed.append(node.fields[projection])
         return processed
-
-    def _build_query(self, node_queries: list[dict]) -> tuple[list, dict]:
-        """docstring"""
-        query: list[tuple[orm.Node, dict]] = []
-        projections: dict[str, list] = defaultdict(lambda: [])
-        for node_query in node_queries:
-            entry_point = node_query.pop("node")
-            node = self.aiida.get_entry_point(entry_point)
-            node_type = node.entry_point.attr
-            args = self._process_query_args(node, node_query)
-            if "project" in args:
-                projections[node_type].extend(
-                    [
-                        p.key
-                        for p in args["project"]
-                        if p.key not in projections[node_type]
-                    ]
-                )
-            query.append((node, args))
-        return query, projections or {node_type: ["node"]}
 
 
 class QBView(ipw.VBox):
