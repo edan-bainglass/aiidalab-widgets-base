@@ -124,34 +124,32 @@ class QBController:
         _ = NodeQueryController(model, view)
         return view
 
-    def _toggle_qb_view(self, _=None) -> None:
+    def _toggle_code_view(self, _=None) -> None:
         """docstring"""
-        self._view.qb_view.clear_output()
-        if self._view.qb_view.layout.display == "none":
+        self._view.code_view.clear_output()
+        if self._view.code_view.layout.display == "none":
             self._display_qb()
-            self._view.qb_view.layout.display = "block"
-            self._view.refresh_qb_view.disabled = False
+            self._view.code_view.layout.display = "block"
         else:
-            self._view.qb_view.layout.display = "none"
-            self._view.refresh_qb_view.disabled = True
+            self._view.code_view.layout.display = "none"
 
     def _display_qb(self) -> None:
         """docstring"""
-        with self._view.qb_view:
+        with self._view.code_view:
             state = deepcopy(self._view.state)
             code = self._model.get_query_builder_string(state)
             print(code)
 
-    def _refresh_qb_view(self, _=None) -> None:
+    def _refresh_code_view(self, _=None) -> None:
         """docstring"""
-        self._view.qb_view.clear_output()
+        self._view.code_view.clear_output()
         self._display_qb()
 
-    def _close_qb_view(self, _=None) -> None:
+    def _close_code_view(self, _=None) -> None:
         """docstring"""
-        self._view.qb_view.clear_output()
-        if self._view.toggle_qb_view.disabled:
-            self._view.qb_view.layout.display = "none"
+        self._view.code_view.clear_output()
+        if self._view.toggle_code_view.disabled:
+            self._view.code_view.layout.display = "none"
 
     def _refresh(self, _=None) -> None:
         """docstring"""
@@ -168,9 +166,8 @@ class QBController:
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.add.on_click(self._add_node_query)
-        self._view.toggle_qb_view.on_click(self._toggle_qb_view)
-        self._view.toggle_qb_view.observe(self._close_qb_view, "disabled")
-        self._view.refresh_qb_view.on_click(self._refresh_qb_view)
+        self._view.toggle_code_view.on_click(self._toggle_code_view)
+        self._view.toggle_code_view.observe(self._close_code_view, "disabled")
         self._view.reset.on_click(self._refresh)
         self._view.submit.on_click(self._submit_query)
         self._view.observe(self._notify_validity, "is_valid")
@@ -181,7 +178,7 @@ class QBController:
         )
         ipw.dlink(
             (self._view.submit, "disabled"),
-            (self._view.toggle_qb_view, "disabled"),
+            (self._view.toggle_code_view, "disabled"),
         )
 
 
@@ -422,7 +419,7 @@ class QBView(ipw.VBox):
                     ],
                 ),
                 self._build_controls_div(),
-                self.qb_view,
+                self.code_view,
             ],
             **kwargs,
         )
@@ -430,7 +427,7 @@ class QBView(ipw.VBox):
     def _build_controls_div(self) -> ipw.VBox:
         """docstring"""
 
-        self.toggle_qb_view = ipw.Button(
+        self.toggle_code_view = ipw.Button(
             layout=CSS.WFIT,
             button_style="primary",
             icon="code",
@@ -438,15 +435,7 @@ class QBView(ipw.VBox):
             disabled=True,
         )
 
-        self.refresh_qb_view = ipw.Button(
-            layout=CSS.BUTTON,
-            button_style="warning",
-            icon="refresh",
-            tooltip="Refresh code",
-            disabled=True,
-        )
-
-        self.qb_view = ipw.Output(
+        self.code_view = ipw.Output(
             layout={
                 "margin": "5px 2px 2px 2px",
                 "padding": "5px",
@@ -481,8 +470,7 @@ class QBView(ipw.VBox):
                         ipw.HBox(
                             layout={},
                             children=[
-                                self.toggle_qb_view,
-                                self.refresh_qb_view,
+                                self.toggle_code_view,
                                 self.message,
                             ],
                         ),
