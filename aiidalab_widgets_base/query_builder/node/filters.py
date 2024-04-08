@@ -79,6 +79,7 @@ class QueryFiltersController(NodeQueryComponentController):
     def _set_event_handlers(self) -> None:
         super()._set_event_handlers()
         self._view.add.on_click(self._add_filter)
+        self._view.filters_container.observe(self._update_state, "children")
 
 
 class QueryFiltersModel(NodeQueryComponentModel):
