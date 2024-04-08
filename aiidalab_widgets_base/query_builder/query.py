@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from copy import deepcopy
 
 import ipywidgets as ipw
 import traitlets
@@ -91,7 +92,8 @@ class QBController:
 
     def _submit_query(self, _=None) -> None:
         """docstring"""
-        self._model.submit(self._view.valid_states)
+        state = deepcopy(self._view.state)
+        self._model.submit(state)
 
     def _notify_validity(self, _=None) -> None:
         """docstring"""
@@ -115,6 +117,7 @@ class QBController:
         model = NodeQueryModel(self._model.aiida)
         view = NodeQueryView()
         view.observe(self._toggle_validity, "is_valid")
+        view.observe(self._update_state, "state")
         _ = NodeQueryController(model, view)
         return view
 
@@ -132,8 +135,8 @@ class QBController:
     def _display_qb(self) -> None:
         """docstring"""
         with self._view.qb_view:
-            states = self._view.valid_states
-            code = self._model.get_query_builder_string(states)
+            state = deepcopy(self._view.state)
+            code = self._model.get_query_builder_string(state)
             print(code)
 
     def _refresh_qb_view(self, _=None) -> None:
@@ -151,6 +154,13 @@ class QBController:
         """docstring"""
         self._view.node_queries = self._view.node_queries[:1]
         self._view.node_queries[0].reset_trigger += 1
+
+    def _update_state(self, _=None) -> None:
+        """docstring"""
+        self._view.state = [
+            query.state for query in self._view.node_queries if query.is_valid
+        ]
+        self._refresh_code_view()
 
     def _set_event_handlers(self) -> None:
         """docstring"""
@@ -378,6 +388,7 @@ class QBView(ipw.VBox):
     """docstring"""
 
     is_valid = traitlets.Bool()
+    state = traitlets.List([])
 
     def __init__(self, **kwargs) -> None:
         """docstring"""
@@ -492,8 +503,3 @@ class QBView(ipw.VBox):
     def node_queries(self, queries=list[NodeQueryView]) -> None:
         """docstring"""
         self.node_queries_container.children = queries
-
-    @property
-    def valid_states(self) -> list[dict]:
-        """docstring"""
-        return [query.state for query in self.node_queries if query.is_valid]

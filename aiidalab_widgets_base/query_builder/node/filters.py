@@ -62,8 +62,19 @@ class QueryFiltersController(NodeQueryComponentController):
         ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
         view = QueryFilterView()
         view.observe(self._toggle_validity, "is_valid")
+        view.observe(self._update_state, "state")
         _ = QueryFilterController(model, view)
         return view
+
+    def _update_state(self, _=None) -> None:
+        """docstring"""
+        # ! FIXME the guard is needed due to an unnecessary state update of the
+        # ! default filter on initialization. Remove when resolved.
+        self._view.state = (
+            [filter.state for filter in self._view.filters]
+            if self._view.container.layout.display != "none"
+            else []
+        )
 
     def _set_event_handlers(self) -> None:
         super()._set_event_handlers()
@@ -110,9 +121,3 @@ class QueryFiltersView(NodeQueryComponentView):
     def filters(self, filters: list[QueryFilterView]) -> None:
         """docstring"""
         self.filters_container.children = filters
-
-    @property
-    def state(self) -> list:
-        if self.container.layout.display != "none":
-            return [filter.state for filter in self.filters]
-        return []

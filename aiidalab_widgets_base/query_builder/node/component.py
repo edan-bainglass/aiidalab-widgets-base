@@ -63,6 +63,7 @@ class NodeQueryComponentView(ipw.VBox):
 
     reset_trigger = traitlets.Int(0)
     is_valid = traitlets.Bool(True)
+    state = traitlets.List([])
 
     component_type = ""
     expand_button_description = ""
@@ -128,8 +129,3 @@ class NodeQueryComponentView(ipw.VBox):
             ],
             **kwargs,
         )
-
-    @property
-    def state(self) -> list:
-        """docstring"""
-        return []

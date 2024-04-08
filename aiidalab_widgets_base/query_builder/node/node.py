@@ -92,6 +92,22 @@ class NodeQueryController:
             and self._has_valid_projections()
         )
 
+    def _update_state(self, _=None) -> None:
+        """docstring"""
+        state = {
+            "node": self._view.node_selector.value,
+            "tag": self._view.tag.value,
+            "filters": self._view.filters.state,
+            "projections": self._view.projections.state,
+        }
+        if self._view.relationship.value:
+            state.update(
+                {
+                    f"with_{self._view.relationship.value}": self._view.their_tag.value,
+                }
+            )
+        self._view.state = state
+
     def _get_component_view(self, type_: str) -> NodeQueryComponentView:
         """docstring"""
         view = None
@@ -99,18 +115,18 @@ class NodeQueryController:
             model = QueryFiltersModel(self._model.aiida)
             ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
             view = QueryFiltersView()
-            view.observe(self._toggle_validity, "is_valid")
             _ = QueryFiltersController(model, view)
         elif type_ == "projections":
             model = QueryProjectionsModel(self._model.aiida)
             ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
             view = QueryProjectionsView()
-            view.observe(self._toggle_validity, "is_valid")
             _ = QueryProjectionsController(model, view)
         else:
             raise ValueError(
                 f"type must be 'filters' or 'projections'; got {type_}",
             )
+        view.observe(self._toggle_validity, "is_valid")
+        view.observe(self._update_state, "state")
         return view
 
     def _set_event_handlers(self) -> None:
@@ -120,6 +136,11 @@ class NodeQueryController:
         self._view.node_selector.observe(self._on_value_change, "value")
         self._view.observe(self._refresh, "reset_trigger")
         self._view.observe(self._toggle_validity, "has_valid_tag")
+
+        for item in self._view.__dict__.values():
+            if isinstance(item, ipw.ValueWidget):
+                item.observe(self._update_state, "value")
+
         ipw.dlink(
             (self._view.node_selector, "value"),
             (self._model, "entry_point"),
@@ -143,6 +164,7 @@ class NodeQueryView(ipw.VBox):
     closed = traitlets.Bool(False)
     is_valid = traitlets.Bool()
     has_valid_tag = traitlets.Bool(True)
+    state = traitlets.Dict({})
 
     def __init__(self, **kwargs):
         """docstring"""
@@ -244,20 +266,3 @@ class NodeQueryView(ipw.VBox):
     @property
     def tag_key(self) -> str:
         return str(id(self))
-
-    @property
-    def state(self) -> dict:
-        """docstring"""
-        state = {
-            "node": self.node_selector.value,
-            "tag": self.tag.value,
-            "filters": self.filters.state,
-            "projections": self.projections.state,
-        }
-        if self.relationship.value:
-            state.update(
-                {
-                    f"with_{self.relationship.value}": self.their_tag.value,
-                }
-            )
-        return state
