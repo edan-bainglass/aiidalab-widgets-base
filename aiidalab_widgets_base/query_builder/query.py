@@ -136,20 +136,18 @@ class QBController:
     def _display_qb(self) -> None:
         """docstring"""
         with self._view.code_view:
-            state = deepcopy(self._view.state)
-            code = self._model.get_query_builder_string(state)
-            print(code)
+            try:
+                if not (state := deepcopy(self._view.state)):
+                    print("You'll see your query code here as you build it")
+                else:
+                    print(self._model.get_query_builder_string(state))
+            except Exception as err:
+                print(str(err))
 
     def _refresh_code_view(self, _=None) -> None:
         """docstring"""
         self._view.code_view.clear_output()
         self._display_qb()
-
-    def _close_code_view(self, _=None) -> None:
-        """docstring"""
-        self._view.code_view.clear_output()
-        if self._view.toggle_code_view.disabled:
-            self._view.code_view.layout.display = "none"
 
     def _refresh(self, _=None) -> None:
         """docstring"""
@@ -161,24 +159,19 @@ class QBController:
         self._view.state = [
             query.state for query in self._view.node_queries if query.is_valid
         ]
-        self._refresh_code_view()
 
     def _set_event_handlers(self) -> None:
         """docstring"""
         self._view.add.on_click(self._add_node_query)
         self._view.toggle_code_view.on_click(self._toggle_code_view)
-        self._view.toggle_code_view.observe(self._close_code_view, "disabled")
         self._view.reset.on_click(self._refresh)
         self._view.submit.on_click(self._submit_query)
         self._view.observe(self._notify_validity, "is_valid")
+        self._view.observe(self._refresh_code_view, "state")
         ipw.dlink(
             (self._view, "is_valid"),
             (self._view.submit, "disabled"),
             lambda valid: not valid,
-        )
-        ipw.dlink(
-            (self._view.submit, "disabled"),
-            (self._view.toggle_code_view, "disabled"),
         )
 
 
@@ -432,7 +425,6 @@ class QBView(ipw.VBox):
             button_style="primary",
             icon="code",
             tooltip="Show code",
-            disabled=True,
         )
 
         self.code_view = ipw.Output(
