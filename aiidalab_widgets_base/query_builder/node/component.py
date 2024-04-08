@@ -29,11 +29,13 @@ class NodeQueryComponentController:
         """docstring"""
         self._view.container.layout.display = "flex"
         self._view.expand.layout.display = "none"
+        self._view.shown = True
 
     def _hide_view(self, _=None) -> None:
         """docstring"""
         self._view.container.layout.display = "none"
         self._view.expand.layout.display = "inline-block"
+        self._view.shown = False
         self._refresh()
         self._view.state = []
 
@@ -65,6 +67,7 @@ class NodeQueryComponentView(ipw.VBox):
 
     reset_trigger = traitlets.Int(0)
     is_valid = traitlets.Bool(True)
+    shown = traitlets.Bool(False)
     state = traitlets.List([])
 
     component_type = ""
