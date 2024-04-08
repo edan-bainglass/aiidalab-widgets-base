@@ -34,6 +34,8 @@ class NodeQueryComponentController:
         """docstring"""
         self._view.container.layout.display = "none"
         self._view.expand.layout.display = "inline-block"
+        self._refresh()
+        self._view.state = []
 
     def _refresh(self, _=None) -> None:
         """docstring"""
