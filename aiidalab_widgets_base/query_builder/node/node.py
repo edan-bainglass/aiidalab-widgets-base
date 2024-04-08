@@ -67,7 +67,7 @@ class NodeQueryController:
 
     def _has_filters(self) -> bool:
         """docstring"""
-        return len(self._view.filters.state) > 0
+        return bool(self._view.filters.shown)
 
     def _has_valid_filters(self) -> bool:
         """docstring"""
@@ -76,7 +76,7 @@ class NodeQueryController:
 
     def _has_projections(self) -> bool:
         """docstring"""
-        return len(self._view.projections.state) > 0
+        return bool(self._view.projections.shown)
 
     def _has_valid_projections(self) -> bool:
         """docstring"""
