@@ -92,14 +92,17 @@ class QBController:
 
     def _submit_query(self, _=None) -> None:
         """docstring"""
-        state = deepcopy(self._view.state)
-        self._model.submit(state)
+        try:
+            state = deepcopy(self._view.state)
+            self._model.submit(state)
+        except Exception:
+            self._notify_validity(message="Query failed to submit")
 
-    def _notify_validity(self, _=None) -> None:
+    def _notify_validity(self, _=None, message: str = "") -> None:
         """docstring"""
-        if not self._view.is_valid:
+        if not self._view.is_valid or message:
             style = '"color: red;"'
-            message = "Please correct invalid input"
+            message = message or "Please correct invalid input"
             self._view.message.value = f"<span style={style}>{message}</span>"
         else:
             self._view.message.value = ""
@@ -221,7 +224,8 @@ class QBModel(traitlets.HasTraits):
     def submit(self, node_queries: list[dict]) -> None:
         """docstring"""
         query, projections = self._build_query(node_queries)
-        self.results = [projections, self.aiida.get_results(query)]
+        results = [projections, self.aiida.get_results(query)]
+        self.results = results
 
     def has_tag(self, view: NodeQueryView) -> bool:
         """docstring"""

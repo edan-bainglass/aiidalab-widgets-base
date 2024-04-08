@@ -33,11 +33,8 @@ class AiiDAService:
         qb = orm.QueryBuilder()
         for node, args in query:
             qb.append(node, **args)
-        try:
-            qb.limit(10)
-            return qb.all()
-        except Exception as err:
-            return [str(err)]
+        qb.limit(10)  # TODO paginate
+        return qb.all()
 
     def get_nodes(self) -> list[tuple[str, str]]:
         """docstring"""
