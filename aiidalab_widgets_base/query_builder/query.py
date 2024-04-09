@@ -316,7 +316,7 @@ class QBModel(traitlets.HasTraits):
             if close_:
                 opened_parentheses_count -= 1
                 if opened_parentheses_count < 0:
-                    raise ValueError("found ) without preceding (")
+                    raise ValueError("found paranthesis mismatch")
 
                 while operator_stack:
                     op = operator_stack.pop()
@@ -334,6 +334,8 @@ class QBModel(traitlets.HasTraits):
         while operator_stack:
             op = operator_stack.pop()
             right = filter_stack.pop()
+            if not filter_stack:
+                raise ValueError("found paranthesis mismatch")
             left = filter_stack.pop()
             if op == "and":
                 filter_stack.append(left & right)
