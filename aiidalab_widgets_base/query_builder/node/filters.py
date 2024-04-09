@@ -21,7 +21,6 @@ class QueryFiltersController(NodeQueryComponentController):
     def _init_view(self) -> None:
         """docstring"""
         default_filter = self._add_filter()
-        default_filter.join.value = None
         default_filter.join.layout.visibility = "hidden"
         default_filter.remove.layout.visibility = "hidden"
 
@@ -59,22 +58,21 @@ class QueryFiltersController(NodeQueryComponentController):
     def _get_filter_view(self) -> QueryFilterView:
         """docstring"""
         model = QueryFilterModel(self._model.aiida)
-        ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
         view = QueryFilterView()
+        _ = QueryFilterController(model, view)
+        ipw.dlink((self._model, "entry_point"), (model, "entry_point"))
         view.observe(self._toggle_validity, "is_valid")
         view.observe(self._update_state, "state")
-        _ = QueryFilterController(model, view)
         return view
 
     def _update_state(self, _=None) -> None:
         """docstring"""
-        # ! FIXME the guard is needed due to an unnecessary state update of the
-        # ! default filter on initialization. Remove when resolved.
-        self._view.state = (
-            [filter.state for filter in self._view.filters]
-            if self._view.container.layout.display != "none"
-            else []
-        )
+        if self._view.container.layout.display != "none":
+            self._view.state = (
+                [filter.state for filter in self._view.filters if filter.state]
+                if self._view.is_valid
+                else []
+            )
 
     def _set_event_handlers(self) -> None:
         super()._set_event_handlers()

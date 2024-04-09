@@ -20,21 +20,27 @@ class QueryFilterController:
         """docstring"""
         self._model = model
         self._view = view
-        self._set_event_handlers()
         self._init_view()
+        self._set_event_handlers()
 
     def _init_view(self) -> None:
         """docstring"""
-        self._view.field.options = self._model.get_fields()
-        if "pk" in self._view.field.options:
-            self._view.field.value = "pk"
-            self._view.operator.value = "=="
-            self._view.argument.value = ""
+        self._update_field_options()
 
     def _close_view(self, _=None) -> None:
         """docstring"""
         self._view.closed = True
         self._view.close()
+
+    def _update_field_options(self):
+        """docstring"""
+        self._view.silent = True
+        self._view.field.options = self._model.get_fields()
+        self._view.silent = False
+        if "pk" in self._view.field.options:
+            self._view.field.value = "pk"
+            self._view.operator.value = "=="
+            self._view.argument.value = ""
 
     def _validate(self, _=None) -> None:
         """docstring"""
@@ -48,6 +54,20 @@ class QueryFilterController:
         else:
             self._view.is_valid = True
             self._view.argument.remove_class("bad-text-input")
+
+    def _on_field_change(self, change: dict) -> None:
+        """docstring"""
+        if not self._view.silent:
+            self._update_operators(change)
+            self._toggle_attr_field(change)
+            self._update_state(change)
+
+    def _update_operators(self, _=None, is_attr=False) -> None:
+        """docstring"""
+        field = self._view.field.value
+        self._view.operator.options = self._model.get_operators(field, is_attr)
+        self._view.operator.value = "=="
+        self._view.argument.value = ""
 
     def _toggle_attr_field(self, change: dict) -> None:
         """docstring"""
@@ -76,14 +96,7 @@ class QueryFilterController:
 
     def _refresh(self, _=None) -> None:
         """docstring"""
-        self._init_view()
-
-    def _update_operators(self, _=None, is_attr=False) -> None:
-        """docstring"""
-        field = self._view.field.value
-        self._view.operator.options = self._model.get_operators(field, is_attr)
-        self._view.operator.value = "=="
-        self._view.argument.value = ""
+        self._update_field_options()
 
     def _refresh_all(self, _=None) -> None:
         """docstring"""
@@ -97,7 +110,7 @@ class QueryFilterController:
         """docstring"""
         self._view.state = {
             **self._view.state_of_filter,
-            "join": self._view.join.value,
+            "join": self._view.join_value,
             "(": self._view.open_.value,
             ")": self._view.close_.value,
         }
@@ -106,15 +119,22 @@ class QueryFilterController:
         """docstring"""
         self._view.remove.on_click(self._close_view)
         self._view.argument.observe(self._validate, "value")
-        self._view.field.observe(self._update_operators, "value")
-        self._view.field.observe(self._toggle_attr_field, "value")
+        self._view.field.observe(self._on_field_change, "value")
         self._view.attr_field.observe(self._toggle_attr_field_rules, "value")
         self._view.observe(self._refresh_all, "reset_trigger")
         self._model.observe(self._refresh, "entry_point")
 
-        for item in self._view.__dict__.values():
-            if isinstance(item, ipw.ValueWidget):
-                item.observe(self._update_state, "value")
+        for attr in (
+            "join",
+            "open_",
+            "attr_field",
+            "not_",
+            "operator",
+            "argument",
+            "close_",
+        ):
+            widget: ipw.ValueWidget = getattr(self._view, attr)
+            widget.observe(self._update_state, "value")
 
         ipw.dlink(
             (self._view.field, "value"),
@@ -127,6 +147,7 @@ class QueryFilterModel(traitlets.HasTraits):
     """docstring"""
 
     entry_point = traitlets.Unicode("")
+
     _needs_validation = True
 
     def __init__(self, service: AiiDAService) -> None:
@@ -164,6 +185,8 @@ class QueryFilterView(ipw.HBox):
     closed = traitlets.Bool(False)
     is_valid = traitlets.Bool(True)
     state = traitlets.Dict({})
+
+    silent = False
 
     def __init__(self, **kwargs):
         """docstring"""
@@ -277,10 +300,15 @@ class QueryFilterView(ipw.HBox):
         }
 
     @property
-    def _field(self) -> str:
+    def _field(self):
         """docstring"""
         return (
             self.field.value
             if not self.attr_field.value
             else f"{self.field.value}.{self.attr_field.value}"
-        )  # type: ignore
+        )
+
+    @property
+    def join_value(self):
+        """docstring"""
+        return None if self.join.layout.visibility == "hidden" else self.join.value
