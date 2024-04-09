@@ -24,8 +24,8 @@ class QBController:
         """docstring"""
         self._model = model
         self._view = view
-        self._set_event_handlers()
         self._init_view()
+        self._set_event_handlers()
 
     def _init_view(self, _=None) -> None:
         """docstring"""
@@ -119,9 +119,9 @@ class QBController:
         """docstring"""
         model = NodeQueryModel(self._model.aiida)
         view = NodeQueryView()
+        _ = NodeQueryController(model, view)
         view.observe(self._toggle_validity, "is_valid")
         view.observe(self._update_state, "state")
-        _ = NodeQueryController(model, view)
         return view
 
     def _toggle_code_view(self, _=None) -> None:
@@ -168,6 +168,7 @@ class QBController:
         self._view.submit.on_click(self._submit_query)
         self._view.observe(self._notify_validity, "is_valid")
         self._view.observe(self._refresh_code_view, "state")
+        self._view.node_queries_container.observe(self._update_state, "children")
         ipw.dlink(
             (self._view, "is_valid"),
             (self._view.submit, "disabled"),
