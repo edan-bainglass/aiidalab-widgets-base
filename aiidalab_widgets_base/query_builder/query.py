@@ -137,7 +137,7 @@ class QBController:
         """docstring"""
         with self._view.code_view:
             try:
-                if not (state := deepcopy(self._view.state)):
+                if not (state := deepcopy(self._view.state)) or not self._view.is_valid:
                     print("You'll see your query code here as you build it")
                 else:
                     print(self._model.get_query_builder_string(state))
