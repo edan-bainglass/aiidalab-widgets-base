@@ -71,7 +71,7 @@ class NodeQueryComponentView(ipw.VBox):
     state = traitlets.List([])
 
     component_type = ""
-    expand_button_description = ""
+    expand_icon = ""
 
     def __init__(self, **kwargs) -> None:
         """docstring"""
@@ -91,10 +91,8 @@ class NodeQueryComponentView(ipw.VBox):
         )
 
         self.expand = ipw.Button(
-            layout=CSS.COMPONENT_BUTTON,
-            button_style="",
-            icon="plus",
-            description=self.expand_button_description,
+            layout={**CSS.BUTTON, **CSS.FLOAT_RIGHT},
+            icon=self.expand_icon,
             tooltip=f"Add {self.component_type}",
         )
 
