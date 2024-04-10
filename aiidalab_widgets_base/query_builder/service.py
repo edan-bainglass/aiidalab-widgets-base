@@ -74,7 +74,7 @@ class AiiDAService:
                 return _ITERABLE_OPERATORS
             if isinstance(node, orm.Dict):
                 return _DICTIONARY_OPERATORS
-        dtype = field.get_root_type()
+        dtype = field.dtype
         if dtype is str:
             return _LITERAL_OPERATORS
         if dtype in (int, float, datetime.date, datetime.datetime):
@@ -112,13 +112,13 @@ class AiiDAService:
             if isinstance(node, orm.List) and not is_iterable(value):
                 return False
         else:
-            if field.get_root_type() is str:
+            if field.dtype is str:
                 # TODO needs work (handle ', ", and combo cases)
                 value = f"'{value}'"
 
             try:
                 cast = self.cast_filter_value(value)
-                if not isinstance(cast, field.get_root_type()):
+                if not isinstance(cast, field.dtype):
                     return False
             except Exception:
                 return False

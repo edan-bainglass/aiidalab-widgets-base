@@ -76,7 +76,7 @@ class QueryProjectionsModel(NodeQueryComponentModel):
     def get_field_type(self, field_name: str) -> t.Any:
         """docstring"""
         field = self.aiida.get_field(self.entry_point, field_name)
-        return field.get_root_type()
+        return field.dtype
 
     def get_fields(self) -> list[str]:
         """docstring"""
