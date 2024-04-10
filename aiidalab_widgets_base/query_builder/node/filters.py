@@ -88,7 +88,7 @@ class QueryFiltersView(NodeQueryComponentView):
     """docstring"""
 
     component_type = "filters"
-    expand_button_description = "filter"
+    expand_icon = "filter"
 
     def __init__(self, **kwargs) -> None:
         """docstring"""
