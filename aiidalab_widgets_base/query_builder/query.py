@@ -154,6 +154,11 @@ class QBController:
         self._view.node_queries = self._view.node_queries[:1]
         self._view.node_queries[0].reset_trigger += 1
 
+    def _on_state_change(self, _=None) -> None:
+        """docstring"""
+        self._refresh_code_view()
+        self._notify_validity()
+
     def _update_state(self, _=None) -> None:
         """docstring"""
         self._view.state = [
@@ -167,7 +172,7 @@ class QBController:
         self._view.reset.on_click(self._refresh)
         self._view.submit.on_click(self._submit_query)
         self._view.observe(self._notify_validity, "is_valid")
-        self._view.observe(self._refresh_code_view, "state")
+        self._view.observe(self._on_state_change, "state")
         self._view.node_queries_container.observe(self._update_state, "children")
         ipw.dlink(
             (self._view, "is_valid"),
