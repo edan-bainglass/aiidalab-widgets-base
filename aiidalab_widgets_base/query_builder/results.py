@@ -9,25 +9,29 @@ from .result import QBResult
 class QBResultsController(ipw.VBox):
     """docstring"""
 
+    _ResultClass = QBResult
+
     def __init__(
         self,
         model: QBResultsModel,
         view: QBResultsView,
+        result_class=QBResult,
     ) -> None:
         """docstring"""
         self._model = model
         self._view = view
+        self._ResultClass = result_class
         self._set_event_handlers()
 
     def _display_results(self, change: dict) -> None:
         """docstring"""
         if change["new"]:
             projections, results = change["new"]
-            QBResult.projections = projections
+            self._ResultClass.projections = projections
             self._view.children = (
-                [QBResult(result) for result in results]
+                [self._ResultClass(result) for result in results]
                 if results
-                else [QBResult("No results")]
+                else [self._ResultClass("No results")]
             )
 
     def _set_event_handlers(self) -> None:
