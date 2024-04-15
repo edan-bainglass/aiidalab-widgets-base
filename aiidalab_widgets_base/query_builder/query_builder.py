@@ -4,6 +4,7 @@ import ipywidgets as ipw
 
 from .guide import QueryBuilderGuide
 from .query import QBController, QBModel, QBView
+from .result import QBResult
 from .results import QBResultsController, QBResultsModel, QBResultsView
 from .service import AiiDAService
 
@@ -17,16 +18,14 @@ class QueryBuilderWidget(ipw.VBox):
         "Guide",
     )
 
-    def __init__(self, **kwargs):
+    def __init__(self, result_class=QBResult, **kwargs):
         """docstring"""
-
-        service = AiiDAService()
 
         self.tabs = ipw.Tab(
             layout={},
             children=[
-                self._get_query_view(service),
-                self._get_results_view(),
+                self._get_query_view(),
+                self._get_results_view(result_class),
                 QueryBuilderGuide(),
             ],
             selected_index=0,
@@ -43,18 +42,18 @@ class QueryBuilderWidget(ipw.VBox):
         """docstring"""
         self.tabs.selected_index = 1
 
-    def _get_query_view(self, service: AiiDAService) -> QBView:
+    def _get_query_view(self) -> QBView:
         """docstring"""
-        self.query_model = QBModel(service)
+        self.query_model = QBModel(service=AiiDAService())
         view = QBView()
         _ = QBController(self.query_model, view)
         return view
 
-    def _get_results_view(self) -> QBResultsView:
+    def _get_results_view(self, result_class=QBResult) -> QBResultsView:
         """docstring"""
         self.results_model = QBResultsModel()
         view = QBResultsView()
-        _ = QBResultsController(self.results_model, view)
+        _ = QBResultsController(self.results_model, view, result_class)
         return view
 
     def _set_event_handlers(self) -> None:
