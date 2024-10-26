@@ -157,6 +157,51 @@ class OptimadeQueryWidget(ipw.VBox):
         title=None,
         **kwargs,
     ) -> None:
+        self.embedded = embedded
+        self.title = title or "OPTIMADE"
+        self.params = kwargs
+
+        render_button = ipw.Button(
+            layout=ipw.Layout(margin="0 10px 0 0", width="fit-content"),
+            description="Load OPTIMADE",
+            icon="refresh",
+        )
+        render_button.on_click(self._on_render)
+
+        super().__init__(
+            children=[
+                ipw.HBox(
+                    layout=ipw.Layout(align_items="center"),
+                    children=[
+                        render_button,
+                        ipw.HTML("<span class='warning'>WARNING: </span>"),
+                        ipw.HTML("<span>OPTIMADE may take some time to load</span>"),
+                    ],
+                ),
+            ],
+            **kwargs,
+        )
+
+        self.rendered = False
+
+    def render(self, _=None) -> None:
+        """Render widget"""
+        pass
+
+    def _on_render(self, _=None):
+        if self.rendered:
+            return
+
+        from aiidalab_qe.common.widgets import LoadingWidget
+
+        self.children = [LoadingWidget("Loading OPTIMADE")]
+        self._render()
+
+        self.rendered = True
+
+    def _render(self):
+        """Render the widget."""
+
         try:
             from ipyoptimade import default_parameters, query_filter, query_provider
         except ImportError:
@@ -176,43 +221,36 @@ class OptimadeQueryWidget(ipw.VBox):
 
         providers_header = ipw.HTML("<h4>Select a provider</h4>")
         providers = query_provider.OptimadeQueryProviderWidget(
-            embedded=embedded,
-            width_ratio=kwargs.pop("width_ratio", None),
-            width_space=kwargs.pop("width_space", None),
-            database_limit=kwargs.pop("database_limit", None),
-            disable_providers=kwargs.pop(
+            embedded=self.embedded,
+            width_ratio=self.params.pop("width_ratio", None),
+            width_space=self.params.pop("width_space", None),
+            database_limit=self.params.pop("database_limit", None),
+            disable_providers=self.params.pop(
                 "disable_providers", default_parameters.DISABLE_PROVIDERS
             ),
-            skip_databases=kwargs.pop(
+            skip_databases=self.params.pop(
                 "skip_databases", default_parameters.SKIP_DATABASE
             ),
-            skip_providers=kwargs.pop(
+            skip_providers=self.params.pop(
                 "skip_providers", default_parameters.SKIP_DATABASE
             ),
-            provider_database_groupings=kwargs.pop(
+            provider_database_groupings=self.params.pop(
                 "provider_database_groupings",
                 default_parameters.PROVIDER_DATABASE_GROUPINGS,
             ),
         )
         filters = query_filter.OptimadeQueryFilterWidget(
-            embedded=embedded,
-            button_style=kwargs.pop("button_style", None),
-            result_limit=kwargs.pop("results_limit", None),
-            subparts_order=kwargs.pop("subparts_order", None),
+            embedded=self.embedded,
+            button_style=self.params.pop("button_style", None),
+            result_limit=self.params.pop("results_limit", None),
+            subparts_order=self.params.pop("subparts_order", None),
         )
 
         ipw.dlink((providers, "database"), (filters, "database"))
 
         filters.observe(self._update_structure, names="structure")
 
-        self.title = title or "OPTIMADE"
-        layout = kwargs.pop("layout", {"width": "auto", "height": "auto"})
-
-        super().__init__(
-            children=(providers_header, providers, filters),
-            layout=layout,
-            **kwargs,
-        )
+        self.children = [providers_header, providers, filters]
 
     def _update_structure(self, change: dict) -> None:
         """New structure chosen"""
