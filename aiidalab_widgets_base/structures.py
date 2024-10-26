@@ -37,7 +37,11 @@ class StructureManagerWidget(ipw.VBox):
     """
 
     input_structure = tl.Union(
-        [tl.Instance(ase.Atoms), tl.Instance(orm.Data)], allow_none=True
+        [
+            tl.Instance(ase.Atoms),
+            tl.Instance(orm.Data),
+        ],
+        allow_none=True,
     )
     structure = tl.Instance(ase.Atoms, allow_none=True)
     structure_node = tl.Instance(orm.Data, allow_none=True, read_only=True)
@@ -45,17 +49,20 @@ class StructureManagerWidget(ipw.VBox):
 
     SUPPORTED_DATA_FORMATS = {"CifData": "core.cif", "StructureData": "core.structure"}
 
-    def __init__(
-        self,
-        importers,
-        viewer=None,
-        editors=None,
-        storable=True,
-        node_class=None,
-        **kwargs,
-    ):
+    def __init__(self, **kwargs):
+        from aiidalab_qe.common.widgets import LoadingWidget
+
+        super().__init__(
+            children=[LoadingWidget("Loading structure manager")],
+            **kwargs,
+        )
+
+        self.rendered = False
+        self.editors_rendered = False
+
+    def render(self, **params):
         """
-        Arguments:
+        `params` may contain:
             importers(list): list of tuples each containing the displayed name of importer and the
                 importer object. Each object should contain 'structure' trait pointing to the imported
                 structure. The trait will be linked to 'structure' trait of this class.
@@ -67,12 +74,21 @@ class StructureManagerWidget(ipw.VBox):
                 Note: If your workflows require a specific node class, better fix it here.
         """
 
+        if self.rendered:
+            return
+
+        from aiidalab_qe.common.widgets import LoadingWidget
+
+        importers = params.get("importers")
+        viewer = params.get("viewer")
+        editors = params.get("editors")
+        storable = params.get("storable")
+        node_class = params.get("node_class")
+
         # History of modifications
         self.history = []
 
         # Undo functionality.
-        btn_undo = ipw.Button(description="Undo", button_style="success")
-        btn_undo.on_click(self.undo)
         self.structure_set_by_undo = False
 
         # To keep track of last inserted structure object
@@ -116,7 +132,7 @@ class StructureManagerWidget(ipw.VBox):
         self.output = ipw.HTML("")
 
         children = [
-            self._structure_importers(importers),
+            self._structure_importers(importers or []),
             self.viewer,
             ipw.HBox(
                 [
@@ -127,15 +143,41 @@ class StructureManagerWidget(ipw.VBox):
             ),
         ]
 
-        structure_editors = self._structure_editors(editors)
-        if structure_editors:
-            structure_editors = ipw.VBox([btn_undo, structure_editors])
-            accordion = ipw.Accordion([structure_editors])
+        self.editors = editors
+
+        self.structure_editors = self._structure_editors(editors)
+
+        if editors:
+            accordion = ipw.Accordion(
+                children=[LoadingWidget("Loading structure editors")]
+            )
             accordion.selected_index = None
+            accordion.observe(self._on_editors_open, "selected_index")
             accordion.set_title(0, "Edit Structure")
             children += [accordion]
 
-        super().__init__(children=[*children, self.output], **kwargs)
+        self.children = [*children, self.output]
+
+        self.rendered = True
+
+    def _on_editors_open(self, change):
+        if self.editors_rendered:
+            return
+
+        btn_undo = ipw.Button(description="Undo", button_style="success")
+        btn_undo.on_click(self.undo)
+
+        accordion = change["owner"]
+        accordion.children = [
+            ipw.VBox(
+                children=[
+                    btn_undo,
+                    self._structure_editors(self.editors),
+                ]
+            )
+        ]
+
+        self.editors_rendered = True
 
     def _structure_importers(self, importers):
         """Preparing structure importers."""
@@ -149,13 +191,23 @@ class StructureManagerWidget(ipw.VBox):
             return importers[0]
 
         # Otherwise making one tab per importer.
-        importers_tab = ipw.Tab()
+        importers_tab = ipw.Tab(selected_index=None)
         importers_tab.children = list(importers)  # One importer per tab.
+        importers_tab.observe(self._on_importer_change, "selected_index")
         for i, importer in enumerate(importers):
             # Labeling tabs.
             importers_tab.set_title(i, importer.title)
             tl.dlink((importer, "structure"), (self, "input_structure"))
+        importers_tab.selected_index = 0
         return importers_tab
+
+    def _on_importer_change(self, change):
+        """When the selected importer changes."""
+        if (tab := change["new"]) is None:
+            return
+        tabs = change["owner"]
+        importer = tabs.children[tab]
+        importer.render()
 
     def _structure_editors(self, editors):
         """Preparing structure editors."""
@@ -180,8 +232,9 @@ class StructureManagerWidget(ipw.VBox):
 
         # If more than one editor was defined.
         if editors:
-            editors_tab = ipw.Tab()
+            editors_tab = ipw.Tab(selected_index=None)
             editors_tab.children = tuple(editors)
+            editors_tab.observe(self._on_editor_change, "selected_index")
             for i, editor in enumerate(editors):
                 editors_tab.set_title(i, editor.title)
                 tl.link((editor, "structure"), (self, "structure"))
@@ -196,8 +249,17 @@ class StructureManagerWidget(ipw.VBox):
                         (self.viewer._viewer, "_camera_orientation"),
                         (editor, "camera_orientation"),
                     )
+            editors_tab.selected_index = 0
             return editors_tab
         return None
+
+    def _on_editor_change(self, change):
+        """When the selected editor changes."""
+        if (tab := change["new"]) is None:
+            return
+        tabs = change["owner"]
+        editor = tabs.children[tab]
+        editor.render()
 
     def store_structure(self, _=None):
         """Stores the structure in AiiDA database."""
@@ -364,15 +426,39 @@ class StructureUploadWidget(ipw.VBox):
     )
 
     def __init__(
-        self, title="", description="Upload Structure", allow_trajectories=False
+        self,
+        title="",
+        description="Upload Structure",
+        allow_trajectories=False,
+        **kwargs,
     ):
+        from aiidalab_qe.common.widgets import LoadingWidget
+
         self.title = title
-        self.file_upload = ipw.FileUpload(
-            description=description, multiple=False, layout={"width": "initial"}
-        )
+        self.description = description
+
         # Whether to allow uploading multiple structures from a single file.
         # In this case, we create TrajectoryData node.
         self.allow_trajectories = allow_trajectories
+
+        super().__init__(
+            children=[
+                LoadingWidget("Loading structure uploader"),
+            ],
+            **kwargs,
+        )
+
+        self.rendered = False
+
+    def render(self):
+        if self.rendered:
+            return
+
+        self.file_upload = ipw.FileUpload(
+            description=self.description,
+            multiple=False,
+            layout={"width": "initial"},
+        )
         supported_formats = ipw.HTML(
             """<a href="https://wiki.fysik.dtu.dk/ase/ase/io/io.html#ase.io.write" target="_blank">
         Supported structure formats
@@ -380,9 +466,10 @@ class StructureUploadWidget(ipw.VBox):
         )
         self._status_message = StatusHTML(clear_after=5)
         self.file_upload.observe(self._on_file_upload, names="value")
-        super().__init__(
-            children=[self.file_upload, supported_formats, self._status_message]
-        )
+
+        self.children = [self.file_upload, supported_formats, self._status_message]
+
+        self.rendered = True
 
     def _validate_and_fix_ase_cell(self, ase_structure, vacuum_ang=10.0):
         """
@@ -472,13 +559,31 @@ class StructureExamplesWidget(ipw.VBox):
     structure = tl.Instance(ase.Atoms, allow_none=True)
 
     def __init__(self, examples, title="", **kwargs):
+        from aiidalab_qe.common.widgets import LoadingWidget
+
         self.title = title
+        self.examples = examples
+
+        super().__init__(
+            children=[LoadingWidget("Loading structure examples")],
+            **kwargs,
+        )
+
+        self.rendered = False
+
+    def render(self):
+        if self.rendered:
+            return
+
         self.on_structure_selection = lambda _structure_ase, _name: None
         self._select_structure = ipw.Dropdown(
-            options=self.get_example_structures(examples)
+            options=self.get_example_structures(self.examples)
         )
         self._select_structure.observe(self._on_select_structure, names=["value"])
-        super().__init__(children=[self._select_structure], **kwargs)
+
+        self.children = [self._select_structure]
+
+        self.rendered = True
 
     @staticmethod
     def get_example_structures(examples):
@@ -516,7 +621,9 @@ class StructureBrowserWidget(ipw.VBox):
         [tl.Instance(ase.Atoms), tl.Instance(orm.Data)], allow_none=True
     )
 
-    def __init__(self, title="", query_types=None):
+    def __init__(self, title="", query_types=None, **kwargs):
+        from aiidalab_qe.common.widgets import LoadingWidget
+
         self.title = title
 
         # Structure objects we want to query for.
@@ -524,6 +631,17 @@ class StructureBrowserWidget(ipw.VBox):
             self.query_structure_type = query_types
         else:
             self.query_structure_type = (StructureData, CifData)
+
+        super().__init__(
+            children=[LoadingWidget("Loading structure browser")],
+            **kwargs,
+        )
+
+        self.rendered = False
+
+    def render(self):
+        if self.rendered:
+            return
 
         # Extracting available process labels.
         qbuilder = orm.QueryBuilder().append(
@@ -581,7 +699,10 @@ class StructureBrowserWidget(ipw.VBox):
         self.results = ipw.Dropdown(layout={"width": "900px"})
         self.results.observe(self._on_select_structure, names="value")
         self.search()
-        super().__init__([box, h_line, self.results])
+
+        self.children = [box, h_line, self.results]
+
+        self.rendered = True
 
     def preprocess(self):
         """Search structures in AiiDA database and add formula extra to them."""
@@ -885,8 +1006,22 @@ class BasicCellEditor(ipw.VBox):
 
     structure = tl.Instance(ase.Atoms, allow_none=True)
 
-    def __init__(self, title="Cell transform"):
+    def __init__(self, title="Cell transform", **kwargs):
+        from aiidalab_qe.common.widgets import LoadingWidget
+
         self.title = title
+
+        super().__init__(
+            children=[LoadingWidget("Loading cell editor")],
+            **kwargs,
+        )
+
+        self.rendered = False
+
+    def render(self):
+        if self.rendered:
+            return
+
         self._status_message = StatusHTML()
 
         # cell transfor opration widget
@@ -948,46 +1083,44 @@ class BasicCellEditor(ipw.VBox):
             description="Reset matrix",
         )
         reset_transformatioin_button.on_click(self._reset_cell_transformation_matrix)
-        super().__init__(
-            children=[
-                ipw.HBox(
-                    [
-                        primitive_cell,
-                        conventional_cell,
-                    ],
-                ),
-                self._status_message,
-                ipw.VBox(
-                    [
-                        ipw.HTML(
-                            "<b>Cell parameters:</b>",
-                            layout={"margin": "20px 0px 10px 0px"},
-                        ),
-                        self.cell_parameters,
-                        ipw.HBox(
-                            [
-                                apply_cell_parameters_button,
-                                self.scale_atoms_position,
-                            ]
-                        ),
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.VBox(
-                    [
-                        ipw.HTML(
-                            "<b>Cell Transformation:</b>",
-                            layout={"margin": "20px 0px 10px 0px"},
-                        ),
-                        self.cell_transformation,
-                        ipw.HBox(
-                            [apply_cell_transformation, reset_transformatioin_button]
-                        ),
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-            ],
-        )
+        self.children = [
+            ipw.HBox(
+                [
+                    primitive_cell,
+                    conventional_cell,
+                ],
+            ),
+            self._status_message,
+            ipw.VBox(
+                [
+                    ipw.HTML(
+                        "<b>Cell parameters:</b>",
+                        layout={"margin": "20px 0px 10px 0px"},
+                    ),
+                    self.cell_parameters,
+                    ipw.HBox(
+                        [
+                            apply_cell_parameters_button,
+                            self.scale_atoms_position,
+                        ]
+                    ),
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.VBox(
+                [
+                    ipw.HTML(
+                        "<b>Cell Transformation:</b>",
+                        layout={"margin": "20px 0px 10px 0px"},
+                    ),
+                    self.cell_transformation,
+                    ipw.HBox([apply_cell_transformation, reset_transformatioin_button]),
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+        ]
+
+        self.rendered = True
 
     @_register_structure
     def _to_primitive_cell(self, _=None, atoms=None):
@@ -1098,8 +1231,21 @@ class BasicStructureEditor(ipw.VBox):
     selection = tl.List(tl.Int())
     camera_orientation = tl.List()
 
-    def __init__(self, title=""):
+    def __init__(self, title="", **kwargs):
+        from aiidalab_qe.common.widgets import LoadingWidget
+
         self.title = title
+
+        super().__init__(
+            children=[LoadingWidget("Loading structure editor")],
+            **kwargs,
+        )
+
+        self.rendered = False
+
+    def render(self):
+        if self.rendered:
+            return
 
         # Define action vector.
         self.axis_p1 = ipw.Text(
@@ -1242,90 +1388,86 @@ class BasicStructureEditor(ipw.VBox):
 
         self._status_message = StatusHTML()
 
-        super().__init__(
-            children=[
-                ipw.HTML(
-                    "<b>Action vector and point:</b>",
-                    layout={"margin": "20px 0px 10px 0px"},
-                ),
-                ipw.HBox(
-                    [
-                        self.axis_p1,
-                        btn_def_atom1,
-                        self.axis_p2,
-                        btn_def_atom2,
-                        btn_get_from_camera,
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.HBox(
-                    [self.point, btn_def_pnt, self.autoclear_selection],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.HTML(
-                    "<b>Move atom(s):</b>", layout={"margin": "20px 0px 10px 0px"}
-                ),
-                ipw.HBox(
-                    [
-                        self.displacement,
-                        btn_move_dr,
-                        self.dxyz,
-                        btn_move_dxyz,
-                        btn_move_to_xyz,
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.HBox([self.phi, btn_rotate], layout={"margin": "0px 0px 0px 20px"}),
-                ipw.HBox(
-                    [
-                        ipw.HTML(
-                            "Mirror on the plane perpendicular to the action vector",
-                            layout={"margin": "0px 0px 0px 0px"},
-                        ),
-                        btn_mirror_perp,
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.HBox(
-                    [
-                        ipw.HTML(
-                            "Mirror on the plane containing action vector and action point",
-                            layout={"margin": "0px 0px 0px 0px"},
-                        ),
-                        btn_mirror_3p,
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.HBox(
-                    [
-                        ipw.HTML(
-                            "Rotate atoms while aligning the action vector with the XYZ vector",
-                            layout={"margin": "0px 0px 0px 0px"},
-                        ),
-                        btn_align,
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.HTML(
-                    "<b>Modify atom(s):</v>", layout={"margin": "20px 0px 10px 0px"}
-                ),
-                ipw.HBox([btn_copy_sel], layout={"margin": "0px 0px 0px 20px"}),
-                ipw.HBox(
-                    [self.element, self.ligand], layout={"margin": "0px 0px 0px 20px"}
-                ),
-                ipw.HBox(
-                    [
-                        btn_modify,
-                        btn_add,
-                        self.bond_length,
-                        use_covalent_radius,
-                    ],
-                    layout={"margin": "0px 0px 0px 20px"},
-                ),
-                ipw.HBox([btn_remove], layout={"margin": "0px 0px 0px 20px"}),
-                self._status_message,
-            ]
-        )
+        self.children = [
+            ipw.HTML(
+                "<b>Action vector and point:</b>",
+                layout={"margin": "20px 0px 10px 0px"},
+            ),
+            ipw.HBox(
+                [
+                    self.axis_p1,
+                    btn_def_atom1,
+                    self.axis_p2,
+                    btn_def_atom2,
+                    btn_get_from_camera,
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.HBox(
+                [self.point, btn_def_pnt, self.autoclear_selection],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.HTML("<b>Move atom(s):</b>", layout={"margin": "20px 0px 10px 0px"}),
+            ipw.HBox(
+                [
+                    self.displacement,
+                    btn_move_dr,
+                    self.dxyz,
+                    btn_move_dxyz,
+                    btn_move_to_xyz,
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.HBox([self.phi, btn_rotate], layout={"margin": "0px 0px 0px 20px"}),
+            ipw.HBox(
+                [
+                    ipw.HTML(
+                        "Mirror on the plane perpendicular to the action vector",
+                        layout={"margin": "0px 0px 0px 0px"},
+                    ),
+                    btn_mirror_perp,
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.HBox(
+                [
+                    ipw.HTML(
+                        "Mirror on the plane containing action vector and action point",
+                        layout={"margin": "0px 0px 0px 0px"},
+                    ),
+                    btn_mirror_3p,
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.HBox(
+                [
+                    ipw.HTML(
+                        "Rotate atoms while aligning the action vector with the XYZ vector",
+                        layout={"margin": "0px 0px 0px 0px"},
+                    ),
+                    btn_align,
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.HTML("<b>Modify atom(s):</v>", layout={"margin": "20px 0px 10px 0px"}),
+            ipw.HBox([btn_copy_sel], layout={"margin": "0px 0px 0px 20px"}),
+            ipw.HBox(
+                [self.element, self.ligand], layout={"margin": "0px 0px 0px 20px"}
+            ),
+            ipw.HBox(
+                [
+                    btn_modify,
+                    btn_add,
+                    self.bond_length,
+                    use_covalent_radius,
+                ],
+                layout={"margin": "0px 0px 0px 20px"},
+            ),
+            ipw.HBox([btn_remove], layout={"margin": "0px 0px 0px 20px"}),
+            self._status_message,
+        ]
+
+        self.rendered = True
 
     def str2vec(self, string):
         return np.array(list(map(float, string.split())))
